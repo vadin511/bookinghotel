@@ -4,6 +4,7 @@ import db from '@/app/lib/db';
 import bcrypt from 'bcryptjs';
 import { generateOTP } from '@/app/utils/otp';
 import { sendOTPEmail } from '@/app/utils/mailer';
+import {UserRegisterPayload} from '@/app/model/user'
 const OTP_SECRET  = process.env.OTP_SECRET_ENV!;
 export async function GET() {
   try {
@@ -16,8 +17,10 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password } = await req.json() as UserRegisterPayload;
     if (!name || !email || !password) {
+      console.log(1);
+      
       return NextResponse.json({ message: 'All fields are required' }, { status: 400 });
     }
 
@@ -26,14 +29,13 @@ export async function POST(req: NextRequest) {
 
 
     const hashedPassword = await bcrypt.hash(password, 10);
-console.log(1);
 
     const res = NextResponse.json({ message: 'OTP sent', step: 'otp' });
     res.cookies.set('temp_user', JSON.stringify({ name, email, password: hashedPassword }), {
       httpOnly: true,
       secure: process.env.NODE_ENV !== 'development',
       path: '/',
-      maxAge: 300, // 5 phút
+      maxAge: 300, 
     });
 
     return res;

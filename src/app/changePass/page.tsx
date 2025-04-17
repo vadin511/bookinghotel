@@ -26,7 +26,7 @@ export default function ChangePassword() {
       if (!res.ok) {
         throw new Error(data.message || 'Đã có lỗi xảy ra');
       }
-
+      
       setMessage(data.message);
     } catch (error: any) {
       setMessage(error.message);

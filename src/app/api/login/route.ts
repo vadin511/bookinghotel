@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateOTP } from '@/app/utils/otp';
-import { sendOTPEmail } from '@/app/utils/mailer';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import bcrypt from 'bcryptjs';
 import db from '@/app/lib/db';
 import jwt from 'jsonwebtoken'
-
+import { UserRegisterPayload } from '@/app/model/user';
 const jwtKey = process.env.JWT_SECRET!
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 });
+// sử dụng redis để lưu trữ 
 const ratelimit = new Ratelimit({
   redis,
   limiter: Ratelimit.fixedWindow(5, '1 m'),
@@ -19,7 +18,7 @@ const ratelimit = new Ratelimit({
 });
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown';
-  const { email, password } = await req.json();
+  const { email, password } = await req.json() as UserRegisterPayload;
   console.log(ip);
   
   const { success, remaining, reset } = await ratelimit.limit(ip);
