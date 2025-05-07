@@ -10,12 +10,16 @@ const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 });
+
+
 // sử dụng redis để lưu trữ 
 const ratelimit = new Ratelimit({
   redis,
   limiter: Ratelimit.fixedWindow(5, '1 m'),
-  analytics: true,
+  analytics: true,    
 });
+
+
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown';
   const { email, password } = await req.json() as UserRegisterPayload;
@@ -23,7 +27,6 @@ export async function POST(req: NextRequest) {
   
   const { success, remaining, reset } = await ratelimit.limit(ip);
   console.log(success);
-  
   if (!success) {
     return NextResponse.json({
       message: 'Too many login attempts. Please try again later.',

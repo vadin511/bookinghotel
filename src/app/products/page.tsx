@@ -1,19 +1,24 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Productpayload } from '../model/product';
+import { useUser } from '../User/user';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Productpayload[]>([]);
   const [showForm, setShowForm] = useState(false);
+ 
   const [newProduct, setNewProduct] = useState<Productpayload>({
     id: 0,
     name: '',
     description: '',
     price: 0,
     stock: 0,
-    user_id: 0,  // This will be set based on logged-in user
+    user_id: 0,  
   });
-
+  
+  const {user} = useUser()
+  
+  
   useEffect(() => {
     fetch('/api/product')
       .then((res) => res.json())
@@ -22,27 +27,28 @@ export default function ProductsPage() {
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Send new product to API
-    await fetch('/api/product', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newProduct),
-    });
+    if(user){
+      await fetch('/api/product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProduct),
+      });
+    }
 
     // Reload products list after adding new product
     fetch('/api/product')
       .then((res) => res.json())
       .then((data) => setProducts(data));
 
-    // Reset form and hide it
+    console.log(user);
+    
     setNewProduct({
       id: 0,
       name: '',
       description: '',
       price: 0,
       stock: 0,
-      user_id: 0,
-    });
+      user_id: user?.id || 0,});
     setShowForm(false);
   };
 

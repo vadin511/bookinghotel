@@ -12,14 +12,14 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
     try {
-      const { name, price, description } = await req.json();
-      console.log(name  , price , description);
+      const { name, price, description ,user_id } = await req.json();
+      console.log("user_id " , user_id);
       
       if (!name || !price || !description) {
         return NextResponse.json({ message: 'All fields are required' }, { status: 400 });
       }
   
-      const [result] = await db.query('INSERT INTO products (name, price, description) VALUES (?, ?, ?)', [name, price, description]);
+      const [result] = await db.query('INSERT INTO products (name, price, description,user_id) VALUES (?, ?, ? , ?)', [name, price, description,user_id]);
   
       return NextResponse.json({ message: 'Product created'}, { status: 201 });
     } catch (error) {

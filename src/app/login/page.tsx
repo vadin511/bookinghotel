@@ -17,9 +17,9 @@ const LoginPage = () => {
 
       alert(data.message)
       if(data.access){
-
         window.location.href = '/dashboard';
       }
+      
     };
   
 
