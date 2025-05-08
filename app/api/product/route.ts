@@ -1,5 +1,6 @@
-import db from '@/app/lib/db';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server';
+import db from '../../lib/db';
 
 export async function GET() {
     try {

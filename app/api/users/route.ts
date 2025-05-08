@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/users/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import db from '@/app/lib/db';
 import bcrypt from 'bcryptjs';
-import { generateOTP } from '@/app/utils/otp';
-import { sendOTPEmail } from '@/app/utils/mailer';
-import {UserRegisterPayload} from '@/app/model/user'
+import { NextRequest, NextResponse } from 'next/server';
+import db from '../../lib/db';
+import { UserRegisterPayload } from '../../model/user';
+import { sendOTPEmail } from '../../utils/mailer'; // Hàm gửi mail
+import { generateOTP } from '../../utils/otp'; // Hàm tạo OTP
 const OTP_SECRET  = process.env.OTP_SECRET_ENV!;
 export async function GET() {
   try {

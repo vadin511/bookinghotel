@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import bcrypt from 'bcryptjs';
-import db from '@/app/lib/db';
-import jwt from 'jsonwebtoken'
-import { UserRegisterPayload } from '@/app/model/user';
+import jwt from 'jsonwebtoken';
+import { NextRequest, NextResponse } from 'next/server';
+import db from '../../lib/db';
+import { UserRegisterPayload } from '../../model/user';
 const jwtKey = process.env.JWT_SECRET!
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,

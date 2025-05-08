@@ -1,7 +1,7 @@
-import { cookies } from 'next/headers';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import jwt from 'jsonwebtoken';
-import db from '@/app/lib/db';
-import { ok } from 'assert';
+import { cookies } from 'next/headers';
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 

@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 import { useEffect, useState } from 'react';
-import {UserRegisterPayload } from '@/app/model/user'
+import { UserRegisterPayload } from '../model/user';
 import { useUser } from '../User/user';
-import { redirect } from 'next/dist/server/api-utils';
 
 
 export default function UsersPage() {

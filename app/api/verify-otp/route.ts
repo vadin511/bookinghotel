@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyOTP } from '@/app/utils/otp';
-import db from '@/app/lib/db';
+import db from '../../lib/db'; // Kết nối đến cơ sở dữ liệu
+import { verifyOTP } from '../../utils/otp'; // Hàm xác thực OTP
 
 const OTP_SECRET =process.env.OTP_SECRET_ENV!;
 

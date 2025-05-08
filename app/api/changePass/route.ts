@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { sendPasswordChangeEmail } from '@/app/utils/mailer'; // Hàm gửi mail
-import db from '@/app/lib/db';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import bcrypt from 'bcryptjs';
-import { generateOTP } from '@/app/utils/otp';
+import { NextRequest, NextResponse } from 'next/server';
+import db from '../../lib/db'; // Kết nối đến cơ sở dữ liệu
+import { sendPasswordChangeEmail } from '../../utils/mailer'; // Hàm gửi mail
 const OTP_SECRET  = process.env.OTP_SECRET_ENV!;
 export async function POST(req: NextRequest) {
   try {
