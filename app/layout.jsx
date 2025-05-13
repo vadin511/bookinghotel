@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import { UserProvider } from "./User/page"; // ✅ Import UserProvider
+import Header from "../components/common/header/Header";
 import "./globals.css";
+import { UserProvider } from "./User/page"; // ✅ Import UserProvider
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,12 +19,13 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) { 
-  console.log(children); // Debugging để kiểm tra children
+  console.log(children); 
 
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <UserProvider> {/* ✅ Bọc app trong UserProvider */}
+          <Header />
           {children}
         </UserProvider>
       </body>

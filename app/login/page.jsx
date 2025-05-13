@@ -69,7 +69,7 @@ const LoginPage = () => {
       <div className="login relative z-[2] bg-[rgb(6_5_7/25%)] backdrop-blur-[38px] shadow-[0_40px_30px_rgb(0_0_0_/_10%)] rounded-[40px] h-[500px] w-[380px] flex flex-col gap-5 items-center justify-center text-center">
         {/* <img src="" alt="Logo" className="w-[74px] mb-8" /> */}
         <div>
-          <p className="text-3xl"> Welcome to SAM SON</p>
+          <p className="text-3xl"><b> <span className="text-[#2c1c0d]"> Welcome to </span> SAM SON</b></p>
           <p> Rất vui khi được bạn biết đến !</p>
         </div>
 
@@ -83,7 +83,7 @@ const LoginPage = () => {
               type="email"
               id="email-input"
               placeholder="Email"
-              className="w-full h-14 !pl-5 rounded-lg bg-[#6f5b47] outline-none text-[#f9f8fa] focus:shadow-[0_0_0_2px_#2c1c0d] transition-all duration-300 peer"
+              className="w-full h-14 !pl-5 rounded-lg bg-[#6f5b47] outline-none text-[#f9f8fa] focus:shadow-[0_0_0_2px_#2c1c0d] transition-all duration-300 "
             />
           </div>
 
@@ -92,10 +92,11 @@ const LoginPage = () => {
               required
               type="password"
               id="password-input"
+              autoComplete="new-password"
               placeholder="Password"
               value={password}
               onChange={handleChange}
-              className="w-full h-14 !pl-5 rounded-lg bg-[#6f5b47] outline-none text-[#f9f8fa] focus:shadow-[0_0_0_2px_#2c1c0d] transition-all duration-300 peer"
+              className="w-full h-14 !pl-5 rounded-lg bg-[#6f5b47] outline-none text-[#f9f8fa] focus:shadow-[0_0_0_2px_#2c1c0d] transition-all duration-300 "
             />
           </div>
 
@@ -110,12 +111,12 @@ const LoginPage = () => {
         <div className="flex flex-col gap-10">
           <a
             href="#"
-            className="text-[#b1aca9] text-[15px] mb-14 hover:text-[#f9f9f9]"
+            className="text-[#b1aca9] text-[17px] mb-14 hover:text-[#f9f9f9]"
           >
-            Forgot password?
+          Quên mật khẩu ?
           </a>
-          <p className=" mt-14 text-[15px]">
-            Not a member yet?{" "}
+          <p className=" mt-14 text-[17px]">
+           Bạn chưa có tài khoản ?{" "}
             <Link
               href={"/register"}
               className="text-[#b98c70] text-[17px] hover:text-[#f9f9f9]"
