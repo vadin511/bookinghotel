@@ -1,3 +1,4 @@
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import { Geist, Geist_Mono } from "next/font/google";
 import Header from "../components/common/header/Header";
 import "./globals.css";
@@ -26,7 +27,7 @@ export default function RootLayout({ children }) {
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <UserProvider> {/* ✅ Bọc app trong UserProvider */}
           <Header />
-          {children}
+          <main>{children}</main>
         </UserProvider>
       </body>
     </html>
