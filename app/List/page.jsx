@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 import { useEffect, useState } from 'react';
-import { UserRegisterPayload } from '../model/user';
-import { useUser } from '../User/user';
+import { useUser } from '../User/page';
 
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<UserRegisterPayload[]>([]);
+  const [users, setUsers] = useState([]);
   const {user} = useUser()
   if(user){
     console.log(user);

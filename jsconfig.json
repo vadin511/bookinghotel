@@ -1,0 +1,53 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./app/*"]
+    }
+  },
+  "include": [
+    "next-env.d.js",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "app/api/hello/route.js",
+    "app/api/login/route.js",
+    "app/api/logout/route.js",
+    "app/api/product/route.js",
+    "app/api/profile/route.js",
+    "app/api/users/route.js",
+    "app/api/verify-otp/route.js",
+    "app/changePass/route.jsx",
+    "app/changePass/page.jsx",
+    "app/dashboard/page.jsx",
+    "app/lib/db.js",
+    "app/List/page.jsx",
+    "app/login/page.jsx",
+    "app/products/page.jsx",
+    "app/register/page.jsx",
+    "app/User/user.jsx",
+    "app/utils/mailer.js",
+    "app/utils/otp.js",
+    "app/layout.jsx",
+    "app/page.jsx",
+    "next.config.js"
+  ],
+  "exclude": ["node_modules"]
+}

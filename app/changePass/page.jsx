@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { useState } from 'react';
 
@@ -8,7 +7,7 @@ export default function ChangePassword() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
@@ -19,17 +18,17 @@ export default function ChangePassword() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, newPassword }),   
+        body: JSON.stringify({ email, newPassword }),
       });
-      
+
       const data = await res.json();
       console.log(data);
       if (!res.ok) {
         throw new Error(data.message || 'Đã có lỗi xảy ra');
       }
-      
+
       setMessage(data.message);
-    } catch (error: any) {
+    } catch (error) {
       setMessage(error.message);
     } finally {
       setLoading(false);

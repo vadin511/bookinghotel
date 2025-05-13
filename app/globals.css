@@ -1,23 +1,7 @@
 @import "tailwindcss";
 
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
 
 body {
   color: var(--foreground);
@@ -32,14 +16,40 @@ body {
   padding: 0;
   margin: 0;
 }
-
-a {
-  color: inherit;
-  text-decoration: none;
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-size: revert;
+    font-weight: revert;
+    margin: revert;
+  }
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+/* Background SVG styling */
+.background svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: scaleY(3) scaleX(2.25);
+  transform-origin: bottom;
+  box-sizing: border-box;
+  display: block;
+  pointer-events: none;
+}
+
+/* Form input effects */
+.textbox input:is(:focus, :not(:invalid)) ~ label {
+  scale: 0.725;
+  translate: 0 -112%;
+}
+
+/* Button hover effects */
+.login button:hover p {
+  translate: -10px 0;
+}
+
+.login button:hover span {
+  opacity: 1;
+  translate: 20px -50%;
 }

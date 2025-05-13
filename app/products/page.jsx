@@ -1,13 +1,12 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Productpayload } from '../model/product';
-import { useUser } from '../User/user';
+import { useUser } from '../User/page';
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Productpayload[]>([]);
+  const [products, setProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
  
-  const [newProduct, setNewProduct] = useState<Productpayload>({
+  const [newProduct, setNewProduct] = useState({
     id: 0,
     name: '',
     description: '',
@@ -25,7 +24,7 @@ export default function ProductsPage() {
       .then((data) => setProducts(data));
   }, []);
 
-  const handleAddProduct = async (e: React.FormEvent) => {
+  const handleAddProduct = async (e) => {
     e.preventDefault();
     if(user){
       await fetch('/api/product', {
