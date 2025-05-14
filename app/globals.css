@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "swiper/css";
+@import "swiper/css/navigation";
+@import "swiper/css/pagination";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -9,10 +12,8 @@ body {
 }
 
 * {
-  box-sizing: border-box;
-  padding: 0;
   margin: 0;
-  font-family: "Share Tech", sans-serif;
+  font-family: "Roboto Slab", serif;
 }
 @layer base {
   h1,
@@ -171,4 +172,34 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Trong globals.css hoặc trong style nội bộ */
+.custom-swiper .swiper-pagination-bullet {
+  @apply w-4 h-4 bg-white opacity-50 rounded-full mx-1 transition;
+}
+
+.custom-swiper .swiper-pagination-bullet-active {
+  @apply opacity-100 scale-110;
+}
+
+@keyframes zoom-in {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+.custom-swiper .swiper-slide {
+  position: relative;
+  overflow: hidden; /* Ensure content stays within the bounds */
+}
+
+.custom-swiper .swiper-slide img {
+  transition: transform 0.5s ease;
+}
+
+.custom-swiper .swiper-slide:hover img {
+  animation: zoom-in 5s ease-in-out forwards;
 }

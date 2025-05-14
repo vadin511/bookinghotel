@@ -1,15 +1,16 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import avatar from "../../../public/assets/images/avatar.jpg";
 
 export default function HeaderAvatarBox() {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef(null);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+    function handleClickOutside(event) {
+      if (ref.current && !ref.current.contains(event.target)) {
         setOpen(false);
       }
     }
@@ -31,9 +32,9 @@ export default function HeaderAvatarBox() {
 
       {/* Box popup bên dưới */}
       {open && (
-        <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+        <div className="absolute right-0 top-10 w-60 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
           <div className="px-4 py-2 text-sm font-medium text-gray-800">
-            Xin chào, User!
+            Xin chào, <Link href="/user" className="text-blue-600 hover:underline">name!</Link>
           </div>
           <div className="px-4 py-2 text-sm text-gray-500 border-t">
             user@example.com

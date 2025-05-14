@@ -9,8 +9,6 @@ export async function POST(req) {
   try {
     const { otp } = await req.json();
     const isValid = verifyOTP(otp, OTP_SECRET);
-    console.log(otp, OTP_SECRET);
-    console.log(isValid);
 
     if (!isValid) {
       return NextResponse.json(
@@ -29,10 +27,31 @@ export async function POST(req) {
       );
     }
 
-    const { name, email, password } = JSON.parse(tempUser);
+    const { full_name, email, password } = JSON.parse(tempUser);
 
-    const query = "INSERT INTO users (name,email,password) VALUES (?,?,?)";
-    const values = [name, email, password];
+    // Giá trị mặc định
+    const avatar_url = null;
+    const phone = null;
+    const role = "user";
+    const created_at = new Date();
+    const updated_at = new Date();
+
+    const query = `
+      INSERT INTO users 
+      (full_name, email, password, avatar_url, phone, role, created_at, updated_at) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const values = [
+      full_name,
+      email,
+      password,
+      avatar_url,
+      phone,
+      role,
+      created_at,
+      updated_at,
+    ];
+
     await db.query(query, values);
 
     const res = NextResponse.json({

@@ -7,7 +7,7 @@ import { useState } from "react";
 import bgLogin from "../../public/assets/images/bgLogin.png";
 
 export default function RegisterPage() {
-  const [name, setName] = useState("");
+  const [ full_name, setFull_Name] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -23,13 +23,15 @@ export default function RegisterPage() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    
     if (checkPasswordStrength(password)) {
+      console.log(123);
       const res = await fetch("/api/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ full_name, email, password, }),
       });
       const data = await res.json();
       console.log(data);
@@ -45,6 +47,8 @@ export default function RegisterPage() {
   };
 
   const handleVerifyOTP = async () => {
+
+    
     const res = await fetch("/api/verify-otp", {
       method: "POST",
       body: JSON.stringify({ email, otp }),
@@ -78,19 +82,15 @@ export default function RegisterPage() {
         </div>
 
         {step === "register" && (
-          <form
-            onSubmit={handleRegister}
-            className="grid gap-3 w-76 mb-8"
-            autocomplete="off"
-          >
+          <form onSubmit={handleRegister} className="grid gap-3 w-76 mb-8" >
             <input
               type="text"
               placeholder="Tên của bạn"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={full_name}
+              onChange={(e) => setFull_Name(e.target.value)}
               className={`w-full h-14 !pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none
                 focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d]
-                ${name ? "bg-[#E8F0FE] text-black" : ""}
+                ${full_name ? "bg-[#E8F0FE] text-black" : ""}
                 transition-all duration-300`}
               required
             />
@@ -109,13 +109,11 @@ export default function RegisterPage() {
               type="password"
               placeholder="Mật khẩu"
               value={password}
-              autoComplete="new-password"
               onChange={(e) => setPassword(e.target.value)}
               className={`w-full h-14 !pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none
                 focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d]
                 ${password ? "bg-[#E8F0FE] text-black" : ""}
-                transition-all duration-300`}
-              required
+                transition-all duration-300`}              required
             />
             <button
               type="submit"

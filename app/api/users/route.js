@@ -17,8 +17,8 @@ export async function GET() {
 
 export async function POST(req) {
   try {
-    const { name, email, password } = await req.json();
-    if (!name || !email || !password) {
+    const { full_name, email, password } = await req.json();
+    if (!full_name || !email || !password) {
       return NextResponse.json({ message: 'Vui lòng nhập đầy đủ thông tin' }, { status: 400 });
     }
 
@@ -35,7 +35,7 @@ export async function POST(req) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const res = NextResponse.json({ message: 'Đã gửi mã OTP. Vui lòng kiểm tra email.', step: 'otp' });
-    res.cookies.set('temp_user', JSON.stringify({ name, email, password: hashedPassword }), {
+    res.cookies.set('temp_user', JSON.stringify({ full_name, email, password: hashedPassword }), {
       httpOnly: true,
       secure: process.env.NODE_ENV !== 'development',
       path: '/',

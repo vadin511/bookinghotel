@@ -48,6 +48,6 @@
     "app/layout.jsx",
     "app/page.jsx",
     "next.config.js"
-  ],
+, "components/common/header/HeaderAvatarBox.jsx"  ],
   "exclude": ["node_modules"]
 }

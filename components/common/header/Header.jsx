@@ -3,9 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import logo from "../../../public/assets/images/logo.svg";
-import MenuMobile from "../menuMobile/MenuMobile";
-import NavBar from "../nav/NavBar";
 import HeaderAvatarBox from "./HeaderAvatarBox";
+import MenuMobile from "./menuMobile/MenuMobile";
+import NavBar from "./nav/NavBar";
 
 const Header = () => {
   return (

@@ -28,6 +28,7 @@ export default function RootLayout({ children }) {
         <UserProvider> {/* ✅ Bọc app trong UserProvider */}
           <Header />
           <main>{children}</main>
+          {/* <BannerSlider/> */}
         </UserProvider>
       </body>
     </html>

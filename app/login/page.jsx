@@ -66,7 +66,7 @@ const LoginPage = () => {
       </div>
 
       {/* Login form */}
-      <div className="login relative z-[2] bg-[rgb(6_5_7/25%)] backdrop-blur-[38px] shadow-[0_40px_30px_rgb(0_0_0_/_10%)] rounded-[40px] h-[500px] w-[380px] flex flex-col gap-5 items-center justify-center text-center">
+      <div className="login relative z-[2] bg-[rgb(6_5_7/25%)] gap-5 backdrop-blur-[38px] shadow-[0_40px_30px_rgb(0_0_0_/_10%)] rounded-[40px] h-[500px] w-[380px] flex flex-col items-center justify-center text-center">
         {/* <img src="" alt="Logo" className="w-[74px] mb-8" /> */}
         <div>
           <p className="text-3xl"><b> <span className="text-[#2c1c0d]"> Welcome to </span> SAM SON</b></p>
@@ -110,7 +110,7 @@ const LoginPage = () => {
 
         <div className="flex flex-col gap-10">
           <a
-            href="#"
+            href=""
             className="text-[#b1aca9] text-[17px] mb-14 hover:text-[#f9f9f9]"
           >
           Quên mật khẩu ?
