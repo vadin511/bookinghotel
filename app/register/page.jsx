@@ -63,9 +63,9 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="grid place-items-center m-0 h-screen bg-[#1e142c] font-['Poppins'] text-[#f9f8fa] overflow-hidden">
+    <div className="grid place-items-center bg-[#1e142c] font-['Poppins'] text-[#f9f8fa] ">
       {/* Background */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full">
         <Image
           src={bgLogin}
           alt="Background Register"

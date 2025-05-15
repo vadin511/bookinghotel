@@ -43,9 +43,7 @@ const LoginPage = () => {
       if (data.access) {
         resetForm();
         console.log(resetForm(), "Form reset");
-        router.push("/dashboard");
-      
-        
+        router.push("/");
       }
       
     } catch (error) {
@@ -54,9 +52,9 @@ const LoginPage = () => {
     }
   };
   return (
-    <div className="grid place-items-center m-0 h-screen bg-[#1e142c] font-['Poppins'] text-[#f9f8fa] overflow-hidden">
+    <div className="grid place-items-center text-[#f9f8fa] ">
       {/* Background waves animation */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full">
         <Image
           src={bgLogin}
           alt="Background login"
@@ -83,7 +81,10 @@ const LoginPage = () => {
               type="email"
               id="email-input"
               placeholder="Email"
-              className="w-full h-14 !pl-5 rounded-lg bg-[#6f5b47] outline-none text-[#f9f8fa] focus:shadow-[0_0_0_2px_#2c1c0d] transition-all duration-300 "
+              className={`w-full h-14 !pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none
+                focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d]
+                ${email ? "bg-[#E8F0FE] text-black" : ""}
+                transition-all duration-300`}
             />
           </div>
 
@@ -96,7 +97,10 @@ const LoginPage = () => {
               placeholder="Password"
               value={password}
               onChange={handleChange}
-              className="w-full h-14 !pl-5 rounded-lg bg-[#6f5b47] outline-none text-[#f9f8fa] focus:shadow-[0_0_0_2px_#2c1c0d] transition-all duration-300 "
+              className={`w-full h-14 !pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none
+                focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d]
+                ${password ? "bg-[#E8F0FE] text-black" : ""}
+                transition-all duration-300`}
             />
           </div>
 
