@@ -1,10 +1,11 @@
-import React from 'react'
 import BannerSlider from './bannerSlider/BannerSlider'
+import CategoryHotel from './categoryhotel/CategoryHotel'
 
 const Home = () => {
   return (
-    <div>
+    <div >
       <BannerSlider/>
+      <CategoryHotel />
     </div>
   )
 }

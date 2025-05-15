@@ -10,7 +10,7 @@ import NavBar from "./nav/NavBar";
 const Header = () => {
   return (
     <>
-      <div className=" bg-[#513821]">
+      <div className=" bg-[#513821] sticky top-0 z-50 " >
         {/* <!-- Desktop Header --> */}
         <div className="hidden md:flex items-center justify-around">
           <div className="flex-shrink-0">

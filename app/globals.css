@@ -13,7 +13,8 @@ body {
 
 * {
   margin: 0;
-  font-family: "Roboto Slab", serif;
+  /* font-family: "Roboto Slab",'Merriweather', serif; */
+  font-family: 'Merriweather', serif;
 }
 @layer base {
   h1,
