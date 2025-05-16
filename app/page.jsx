@@ -1,8 +1,12 @@
+
+
 import Home from "../components/home/Home";
-export default function Homepage() {
+
+const Homepage = () => {
   return (
-    <>
-    <Home/>
-    </>
+    <div>
+      <Home />
+    </div>
   );
-}
+};
+export default Homepage;

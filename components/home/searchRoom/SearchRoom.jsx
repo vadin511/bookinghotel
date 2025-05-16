@@ -15,8 +15,8 @@ const SearchRoom = () => {
   ];
 
   return (
-    <div className="  bg-[#eeebe9] rounded-full flex flex-wrap justify-around p-6 ">
-      <div className="relative inline-flex items-center border border-gray-300 rounded-full pl-12 pr-10 py-4  text-xl text-[#5a3f26]">
+    <div className="  bg-[#eeebe9] rounded-full flex flex-wrap justify-around p-4 ">
+      <div className="relative inline-flex items-center border border-gray-300 rounded-full pl-12 pr-10   text-xl text-[#5a3f26]">
         {/* Icon search bên trái */}
         <div className="absolute left-3 pointer-events-none">
           <i className="fas fa-search text-lg"></i>
@@ -85,7 +85,7 @@ const SearchRoom = () => {
 
       {/* Promotion Toggle */}
       <div className="flex items-center gap-4 space-x-3 border border-gray-300 rounded-full text-[#5a3f26] text-xl font-serif cursor-pointer min-w-[140px] md:min-w-[180px] pl-12 pr-10 py-4 ">
-        <i class="fas fa-gift"></i>
+        <i className="fas fa-gift"></i>
         <span>Khuyến mãi</span>
       </div>
 

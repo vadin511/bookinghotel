@@ -11,7 +11,7 @@ import slider3 from "../../../public/assets/images/slider3.jpg";
 
 export default function BannerSlider() {
   return (
-    <div className="relative">
+    <div>
       <Swiper
         spaceBetween={0}
         centeredSlides
