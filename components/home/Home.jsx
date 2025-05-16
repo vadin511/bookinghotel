@@ -1,11 +1,13 @@
+import CategoryHotel from "../home/categoryhotel/CategoryHotel"
 import BannerSlider from './bannerSlider/BannerSlider'
-import CategoryHotel from './categoryhotel/CategoryHotel'
 
 const Home = () => {
   return (
     <div >
-      <BannerSlider/>
+     <div className="relative">
+      <BannerSlider />
       <CategoryHotel />
+      </div>
     </div>
   )
 }
