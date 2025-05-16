@@ -1,7 +1,50 @@
 const CategoryHotel = () => {
   return (
-    <div className="">
-      <div className="rounded-xl w-[410px] overflow-hidden bg-[#f0ebe8]">
+    <div className="flex justify-center gap-10 p-10">
+      <div>
+      <img
+          alt="Barcelona city view with famous mosaic bench and skyline under blue sky with clouds"
+          className="w-full h-48 object-cover"
+          src="https://storage.googleapis.com/a1aa/image/56357622-b77a-4c3f-2376-2a6a5b7634a2.jpg"
+        />
+      </div>
+      <div>
+      <img
+          alt="Barcelona city view with famous mosaic bench and skyline under blue sky with clouds"
+          className="w-full h-48 object-cover"
+          src="https://storage.googleapis.com/a1aa/image/56357622-b77a-4c3f-2376-2a6a5b7634a2.jpg"
+        />
+      </div>
+      <div>
+      <img
+          alt="Barcelona city view with famous mosaic bench and skyline under blue sky with clouds"
+          className="w-full h-48 object-cover"
+          src="https://storage.googleapis.com/a1aa/image/56357622-b77a-4c3f-2376-2a6a5b7634a2.jpg"
+        />
+      </div>
+      <div>
+      <img
+          alt="Barcelona city view with famous mosaic bench and skyline under blue sky with clouds"
+          className="w-full h-48 object-cover"
+          src="https://storage.googleapis.com/a1aa/image/56357622-b77a-4c3f-2376-2a6a5b7634a2.jpg"
+        />
+      </div>
+      <div>
+      <img
+          alt="Barcelona city view with famous mosaic bench and skyline under blue sky with clouds"
+          className="w-full h-48 object-cover"
+          src="https://storage.googleapis.com/a1aa/image/56357622-b77a-4c3f-2376-2a6a5b7634a2.jpg"
+        />
+      </div>
+      <div>
+      <img
+          alt="Barcelona city view with famous mosaic bench and skyline under blue sky with clouds"
+          className="w-full h-48 object-cover"
+          src="https://storage.googleapis.com/a1aa/image/56357622-b77a-4c3f-2376-2a6a5b7634a2.jpg"
+        />
+      </div>
+      
+      {/* <div className="rounded-xl w-[410px] overflow-hidden bg-[#f0ebe8]">
         <img
           alt="Barcelona city view with famous mosaic bench and skyline under blue sky with clouds"
           className="w-full h-48 object-cover"
@@ -98,7 +141,7 @@ const CategoryHotel = () => {
             Read more
           </button>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

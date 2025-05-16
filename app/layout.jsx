@@ -1,7 +1,6 @@
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { Geist, Geist_Mono } from "next/font/google";
 import Header from "../components/common/header/Header";
-import SearchRoom from '../components/home/searchRoom/SearchRoom';
 import "./globals.css";
 import { UserProvider } from "./User/page";
 
@@ -27,7 +26,6 @@ export default function RootLayout({ children }) {
         <UserProvider>
           <Header />
           <main>{children}</main>
-           <SearchRoom />
         </UserProvider>
       </body>
     </html>

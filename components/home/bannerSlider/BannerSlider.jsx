@@ -1,6 +1,5 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -9,25 +8,8 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import slider1 from "../../../public/assets/images/slider1.jpg";
 import slider2 from "../../../public/assets/images/slider2.jpg";
 import slider3 from "../../../public/assets/images/slider3.jpg";
-import SearchRoom from "../searchRoom/SearchRoom";
 
 export default function BannerSlider() {
-  const searchRef = useRef(null);
-  const [isSticky, setIsSticky] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const threshold = 600; // chiều cao bạn muốn search dính header
-      if (window.scrollY > threshold) {
-        setIsSticky(true);
-      } else {
-        setIsSticky(false);
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <div className="relative">
       <Swiper
@@ -55,17 +37,6 @@ export default function BannerSlider() {
           </SwiperSlide>
         ))}
       </Swiper>
-
-      <div
-        ref={searchRef}
-        className={`transition-all duration-300 z-50 w-full px-4 ${
-          isSticky
-            ? "fixed top-[80px] left-0" // dưới header
-            : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-        }`}
-      >
-        <SearchRoom />
-      </div>
     </div>
   );
 }
