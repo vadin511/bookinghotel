@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 import bgLogin from "../../public/assets/images/bgLogin.png";
 
 export default function RegisterPage() {
@@ -14,6 +15,7 @@ export default function RegisterPage() {
   const [otp, setOTP] = useState("");
   const [step, setStep] = useState("register");
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const checkPasswordStrength = (password) => {
     const regex =
@@ -25,7 +27,6 @@ export default function RegisterPage() {
     e.preventDefault();
 
     if (checkPasswordStrength(password)) {
-      console.log(123);
       const res = await fetch("/api/users", {
         method: "POST",
         headers: {
@@ -34,7 +35,6 @@ export default function RegisterPage() {
         body: JSON.stringify({ full_name, email, password }),
       });
       const data = await res.json();
-      console.log(data);
 
       if (data.step === "otp") {
         alert(data.message);
@@ -49,6 +49,9 @@ export default function RegisterPage() {
   const handleVerifyOTP = async () => {
     const res = await fetch("/api/verify-otp", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ email, otp }),
     });
 

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 import { useEffect, useState } from 'react';
-import { useUser } from '../User/page';
+import { useUser } from '../user/page';
 
 
 export default function UsersPage() {

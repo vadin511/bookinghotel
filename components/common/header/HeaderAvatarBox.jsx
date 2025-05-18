@@ -1,16 +1,24 @@
+
 "use client";
-import { useUser } from "@/User/page";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchUserProfile, logoutUser, selectUser } from "../../../app/store/features/userSlice";
 import avatar from "../../../public/assets/images/avatar.jpg";
 
 export default function HeaderAvatarBox() {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const router = useRouter();
-  const { user } = useUser();
+  const dispatch = useDispatch();
+  const user = useSelector(selectUser);
+
+  // Fetch user profile when component mounts
+  useEffect(() => {
+    dispatch(fetchUserProfile());
+  }, [dispatch]);
 
   // Xử lý click bên ngoài để đóng dropdown
   useEffect(() => {
@@ -29,7 +37,7 @@ export default function HeaderAvatarBox() {
   const handleSubmit = () => {
     if (!user?.full_name) {
       // Nếu không có user.full_name (chưa đăng nhập) thì chuyển hướng đến trang login
-        window.location.href = "/login"; 
+      window.location.href = "/login"; 
     } else {
       // Nếu có user.full_name (đã đăng nhập) thì toggle dropdown
       setOpen(!open);
@@ -38,13 +46,14 @@ export default function HeaderAvatarBox() {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch("/api/logout", {
-        method: "POST",
-      });
-      const data = await res.json();
-      alert(data.message);
-        window.location.href = "/login"; 
-      setOpen(!open);
+      const resultAction = await dispatch(logoutUser());
+      if (logoutUser.fulfilled.match(resultAction)) {
+        alert(resultAction.payload.message);
+        window.location.href = "/login";
+      } else {
+        alert("Đăng xuất thất bại. Vui lòng thử lại.");
+      }
+      setOpen(false);
     } catch (error) {
       console.error("Đăng xuất thất bại:", error);
       alert("Đăng xuất thất bại. Vui lòng thử lại.");
@@ -82,7 +91,7 @@ export default function HeaderAvatarBox() {
           <div className="px-4 py-2 border-t">
             <button
               onClick={handleLogout}
-              className="w-full text-left text-sm text-red-600 hover:underline"
+              className="w-full text-left text-sm cursor-pointer text-red-600 hover:underline"
             >
               Đăng xuất
             </button>

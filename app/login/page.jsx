@@ -2,16 +2,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import bgLogin from "../../public/assets/images/bgLogin.png";
+import { loginUser, selectLoginStatus } from "../store/features/userSlice";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const dispatch = useDispatch();
+  const loginStatus = useSelector(selectLoginStatus);
 
   const resetForm = () => {
     setEmail("");
     setPassword("");
-    console.log("Form reset");
   };
 
   const handleChange = (e) => {
@@ -26,28 +29,23 @@ const LoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    
     try {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-      alert(data.message);
-
-      if (data.access) {
+      const resultAction = await dispatch(loginUser({ email, password }));
+      
+      if (loginUser.fulfilled.match(resultAction)) {
+        alert(resultAction.payload.message);
         resetForm();
-        console.log(resetForm(), "Form reset");
         window.location.href = "/";
+      } else if (loginUser.rejected.match(resultAction)) {
+        alert(resultAction.payload || "Đăng nhập thất bại");
       }
     } catch (error) {
       console.error("Login error:", error);
       alert("Đăng nhập thất bại");
     }
   };
+
   return (
     <div className="relative p-10 grid place-items-center text-[#f9f8fa] ">
       {/* Background waves animation */}
@@ -109,9 +107,10 @@ const LoginPage = () => {
 
             <button
               type="submit"
+              disabled={loginStatus === 'loading'}
               className="h-14 px-4 rounded-lg bg-[#2c1c0d] text-[#f9f9f9] text-lg cursor-pointer relative overflow-hidden hover:bg-[#251f16] transition-colors duration-300"
             >
-              Login
+              {loginStatus === 'loading' ? 'Đang đăng nhập...' : 'Login'}
             </button>
           </form>
         </div>
