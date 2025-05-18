@@ -2,8 +2,8 @@
 
 const CategoryHotel = () => {
   return (
-    <div className="flex flex-wrap max-w-8xl justify-center gap-10 pt-10 pb-10">
-      <div className="bg-[#f0ebe8] rounded-xl w-[410px] text-center text-[]">
+    <div className="flex flex-wrap justify-center gap-6 pt-10 pb-10">
+      <div className="bg-[#f0ebe8] rounded-xl w-[410px] text-center ">
         <img
           alt="Barcelona city view with famous mosaic bench and skyline under blue sky with clouds"
           className="w-full h-48 object-cover rounded-xl"

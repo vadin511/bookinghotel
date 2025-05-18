@@ -16,34 +16,37 @@ const Home = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      const bannerBottom = bannerRef.current?.getBoundingClientRect().bottom || 0;
-      const introTop = introRef.current?.getBoundingClientRect().top || 0;
+      const bannerBottom =
+        bannerRef.current?.getBoundingClientRect().bottom || 0;
 
-      // Nếu cuộn lên lại gần đỉnh banner → quay về vị trí giữa banner
+      const footerEl = document.querySelector("footer");
+      const footerTop = footerEl?.getBoundingClientRect().top || Infinity;
+
+      // Nếu cuộn lên gần banner → quay lại vị trí ban đầu
       if (bannerBottom > window.innerHeight / 2) {
         setIsFixed(false);
       }
-      // Nếu đã cuộn quá intro → không hiển thị nữa
-      else if (introTop < 80) {
+      // Nếu footer hiện trong viewport → ẩn SearchRoom
+      else if (footerTop < window.innerHeight) {
         setIsFixed(false);
       }
-      // Nếu scroll xuống vượt slider → fixed
+      // Ngược lại → hiện SearchRoom fixed
       else {
         setIsFixed(true);
       }
     };
-
+    handleScroll();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
-    <>
+    <div>
       {/* Slider + SearchRoom */}
       <div ref={bannerRef} className="relative h-[600px]">
         <BannerSlider />
         {!isFixed && (
-          <div className="absolute bottom-[5%] left-1/2 transform -translate-x-1/2 z-30 w-full max-w-7xl px-4">
+          <div className="absolute bottom-[5%] left-1/2 transform -translate-x-1/2 z-30 container max-w-7xl mx-auto w-full ">
             <SearchRoom />
           </div>
         )}
@@ -53,22 +56,22 @@ const Home = () => {
       {isFixed && (
         <div
           ref={searchRef}
-          className="fixed top-[44px] left-1/2 transform -translate-x-1/2 z-50 w-full max-w-7xl px-4 transition-all duration-300"
+          className="fixed top-[60px] left-1/2 transform -translate-x-1/2 z-50 container max-w-7xl mx-auto w-full transition-all duration-300"
         >
-          <div className=" rounded-xl shadow-lg p-4">
+          <div>
             <SearchRoom />
           </div>
         </div>
       )}
 
       {/* Nội dung chính */}
-      <div ref={introRef}>
+      <div className="container max-w-7xl mx-auto mt-50 mb-10" ref={introRef}>
         <IntroHome />
+        <CategoryHotel />
+        <CategorySlider />
+        <BannerNews />
       </div>
-      <CategoryHotel />
-      <BannerNews />
-      <CategorySlider />
-    </>
+    </div>
   );
 };
 

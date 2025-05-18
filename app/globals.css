@@ -4,17 +4,9 @@
 @import "swiper/css/navigation";
 @import "swiper/css/pagination";
 
-@custom-variant dark (&:is(.dark *));
-
-body {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 * {
-  margin: 0;
   /* font-family: "Roboto Slab",'Merriweather', serif; */
-  font-family: 'Merriweather', serif;
+  font-family: "Merriweather", serif;
 }
 @layer base {
   h1,
@@ -25,7 +17,6 @@ body {
   h6 {
     font-size: revert;
     font-weight: revert;
-    margin: revert;
   }
 }
 
@@ -41,22 +32,6 @@ body {
   box-sizing: border-box;
   display: block;
   pointer-events: none;
-}
-
-/* Form input effects */
-.textbox input:is(:focus, :not(:invalid)) ~ label {
-  scale: 0.725;
-  translate: 0 -112%;
-}
-
-/* Button hover effects */
-.login button:hover p {
-  translate: -10px 0;
-}
-
-.login button:hover span {
-  opacity: 1;
-  translate: 20px -50%;
 }
 
 @theme inline {
@@ -183,27 +158,28 @@ body {
 .custom-swiper .swiper-pagination-bullet-active {
   @apply opacity-100 scale-110;
 }
-
+/* banner chính */
 @keyframes zoom-in {
-  0% {
+  from {
     transform: scale(1);
   }
-  100% {
+  to {
     transform: scale(1.1);
   }
 }
-.custom-swiper .swiper-slide {
-  position: relative;
-  overflow: hidden; /* Ensure content stays within the bounds */
-}
 
+/* Hiệu ứng scale ảnh khi slide active */
 .custom-swiper .swiper-slide img {
-  transition: transform 0.5s ease;
-}
-
-.custom-swiper .swiper-slide:hover img {
+  transform: scale(1);
+  transition: transform 5s ease-in-out ;
   animation: zoom-in 5s ease-in-out forwards;
 }
+
+.custom-swiper .swiper-slide-active img {
+  transform: scale(1.1);
+}
+
+/* banner phụ */
 .mySwiper {
   width: 100%;
   padding-top: 50px;
@@ -227,8 +203,6 @@ body {
   object-fit: cover;
   border-radius: 12px;
 }
-
-
 
 /* app/utils/globals.css */
 @keyframes slideDown {

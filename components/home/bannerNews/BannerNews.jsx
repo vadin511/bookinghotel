@@ -3,8 +3,8 @@ import imgBannerNews from "../../../public/assets/images/imgBannerNews.jpg";
 
 const BannerNews = () => {
   return (
-    <div className="  pt-[40px] px-[105px] pb-[40px]">
-      <div className="max-w-8xl bg-[#f1ede8] rounded-lg p-8 text-center text-[#5a4634] select-none">
+    <div className="pt-[40px] pb-[40px]">
+      <div className=" bg-[#f1ede8] rounded-lg p-8 text-center text-[#5a4634] select-none">
         <p className="mb-10 text-2xl leading-relaxed">
           Booking through our website will open many
           <br />

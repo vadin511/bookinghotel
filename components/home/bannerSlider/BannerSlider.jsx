@@ -11,7 +11,7 @@ import slider3 from "../../../public/assets/images/slider3.jpg";
 
 export default function BannerSlider() {
   return (
-    <div>
+    <div className="custom-swiper relative w-full h-[800px]">
       <Swiper
         spaceBetween={0}
         centeredSlides
@@ -20,10 +20,10 @@ export default function BannerSlider() {
         loop
         allowTouchMove={false}
         modules={[Autoplay, Pagination, Navigation]}
-        className="w-full h-[800px]"
+        className="max-w-9xl h-full"
       >
         {[slider1, slider2, slider3].map((img, idx) => (
-          <SwiperSlide key={idx}>
+          <SwiperSlide key={idx} className="relative w-full h-full">
             <Image
               src={img}
               alt={`slider${idx + 1}`}

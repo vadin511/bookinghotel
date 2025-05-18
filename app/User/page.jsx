@@ -1,4 +1,4 @@
-'use client'
+"use client"
 import { createContext, useContext, useEffect, useState } from 'react';
 
 
@@ -8,21 +8,18 @@ const UserContext = createContext(undefined);
 export const UserProvider = ( {children} ) => {
   const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    console.log(1);
-    
+  useEffect(() => {    
     const fetchUser = async () => {
-      const res = await fetch('/api/profile'); 
+      const res = await fetch('/api/profile');
       if (res.ok) {
         const data = await res.json();
-        
         setUser(data.user);
       }
     };
 
     fetchUser();
   }, []);
-  console.log(user);
+  console.log(user,'useruser');
   
   return (
     <UserContext.Provider value={{ user, setUser }}>
