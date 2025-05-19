@@ -1,7 +1,5 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { Geist, Geist_Mono } from "next/font/google";
-import Footer from "../components/common/footer/Footer";
-import Header from "../components/common/header/Header";
 import "./globals.css";
 import { ReduxProvider } from "./store/provider";
 
@@ -21,14 +19,11 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ReduxProvider>
-          <Header />
           <main>{children}</main>
-          <Footer />
         </ReduxProvider>
       </body>
     </html>

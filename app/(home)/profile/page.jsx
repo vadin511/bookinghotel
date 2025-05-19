@@ -1,7 +1,7 @@
 "use client";
 
 import { useSelector } from "react-redux";
-import { selectUser } from "../store/features/userSlice";
+import { selectUser } from "../../store/features/userSlice";
 
 const ProfilePage = () => {
   const user = useSelector(selectUser);

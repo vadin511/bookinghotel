@@ -3,8 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import bgLogin from "../../public/assets/images/bgLogin.png";
-import { loginUser, selectLoginStatus } from "../store/features/userSlice";
+import bgLogin from "../../../public/assets/images/bgLogin.png";
+import { loginUser, selectLoginStatus } from "../../store/features/userSlice";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");

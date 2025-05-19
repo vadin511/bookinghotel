@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import bgLogin from "../../public/assets/images/bgLogin.png";
+import bgLogin from "../../../public/assets/images/bgLogin.png";
 
 export default function RegisterPage() {
   const [full_name, setFull_Name] = useState("");
