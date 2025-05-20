@@ -9,7 +9,8 @@ export async function POST(req) {
   try {
     const { otp } = await req.json();
     const isValid = verifyOTP(otp, OTP_SECRET);
-
+    console.log(isValid);
+    
     if (!isValid) {
       return NextResponse.json(
         { message: "OTP không hợp lệ" },
@@ -31,23 +32,21 @@ export async function POST(req) {
 
     // Giá trị mặc định
     const avatar_url = null;
-    const phone = null;
-    const role = "user";
+    const role_id = "user";
     const created_at = new Date();
     const updated_at = new Date();
 
     const query = `
       INSERT INTO users 
-      (full_name, email, password, avatar_url, phone, role, created_at, updated_at) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      (full_name, email, password, avatar_url, role_id, created_at, updated_at) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
     const values = [
       full_name,
       email,
       password,
       avatar_url,
-      phone,
-      role,
+      role_id,
       created_at,
       updated_at,
     ];
