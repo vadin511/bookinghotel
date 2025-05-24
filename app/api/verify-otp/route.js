@@ -31,23 +31,21 @@ export async function POST(req) {
 
     // Giá trị mặc định
     const avatar_url = null;
-    const phone = null;
-    const role = "user";
+    const role_id = "user";
     const created_at = new Date();
-    const updated_at = new Date();
+    const updated_at = null;
 
     const query = `
       INSERT INTO users 
-      (full_name, email, password, avatar_url, phone, role, created_at, updated_at) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      (full_name, email, password, avatar_url, role_id, created_at, updated_at) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
     const values = [
       full_name,
       email,
       password,
       avatar_url,
-      phone,
-      role,
+      role_id,
       created_at,
       updated_at,
     ];
