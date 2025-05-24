@@ -37,7 +37,7 @@
     "app/(home)/changePass/route.jsx",
     "app/(home)/changePass/page.jsx",
     "components/admin/dashboard/page.jsx",
-    "app/lib/db.js",
+    "app/lib/db.ts",
     "app/(home)/List/page.jsx",
     "app/(home)/login/page.jsx",
     "app/products/page.jsx",

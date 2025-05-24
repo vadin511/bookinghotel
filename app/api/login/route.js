@@ -58,17 +58,25 @@ export async function POST(req) {
     { expiresIn: "1h" }
   );
 
-  const response = NextResponse.json({
+  const response = new NextResponse(
+  JSON.stringify({
     message: "Đăng nhập thành công",
     access: true,
-  });
+  }),
+  {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }
+);
 
-  response.cookies.set("token", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "development",
-    path: "/",
-    maxAge: 60 * 60,
-  });
+response.cookies.set("token", token, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV !== "development", // <-- sửa chỗ này nữa
+  path: "/",
+  maxAge: 60 * 60,
+});
 
-  return response;
+return response;
 }

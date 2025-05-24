@@ -9,7 +9,8 @@ export async function POST(req) {
   try {
     const { otp } = await req.json();
     const isValid = verifyOTP(otp, OTP_SECRET);
-
+    console.log(isValid);
+    
     if (!isValid) {
       return NextResponse.json(
         { message: "OTP không hợp lệ" },
