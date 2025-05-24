@@ -34,7 +34,7 @@ export async function POST(req) {
     const avatar_url = null;
     const role_id = "user";
     const created_at = new Date();
-    const updated_at = new Date();
+    const updated_at = null;
 
     const query = `
       INSERT INTO users 

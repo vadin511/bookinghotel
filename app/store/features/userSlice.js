@@ -47,22 +47,24 @@ export const loginUser = createAsyncThunk(
         },
         body: JSON.stringify(credentials),
       });
-      
-      if (!res.ok) {
-        throw new Error('Failed to login');
-      }
-      
+
       const data = await res.json();
-      if (!data.access) {
-        return rejectWithValue(data.message);
+
+      if (!res.ok) {
+        return rejectWithValue(data.message || 'Đăng nhập thất bại');
       }
-      
+
+      if (!data.access) {
+        return rejectWithValue(data.message || 'Đăng nhập thất bại');
+      }
+
       return data;
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Lỗi không xác định');
     }
   }
 );
+
 
 const userSlice = createSlice({
   name: 'user',

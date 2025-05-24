@@ -9,4 +9,4 @@ const connection = mysql.createPool({
   connectionLimit: 10,
 });
 
-export default connection;
+export default connection; 

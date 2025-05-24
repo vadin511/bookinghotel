@@ -52,7 +52,7 @@ export async function POST(req) {
       email: user.email,
       full_name: user.full_name,
       avatar_url: user.avatar_url,
-      role: user.role,
+      role_id: user.role_id,
     },
     jwtKey,
     { expiresIn: "1h" }

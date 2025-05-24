@@ -27,24 +27,26 @@ const LoginPage = () => {
     }
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+ const handleLogin = async (e) => {
+  e.preventDefault();
+  
+  try {
+    const resultAction = await dispatch(loginUser({ email, password }));
     
-    try {
-      const resultAction = await dispatch(loginUser({ email, password }));
-      
-      if (loginUser.fulfilled.match(resultAction)) {
-        alert(resultAction.payload.message);
-        resetForm();
-        window.location.href = "/";
-      } else if (loginUser.rejected.match(resultAction)) {
-        alert(resultAction.payload || "Đăng nhập thất bại");
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      alert("Đăng nhập thất bại");
+    if (loginUser.fulfilled.match(resultAction)) {
+      alert(resultAction.payload.message);
+      resetForm();
+      window.location.href = "/";
+    } else if (loginUser.rejected.match(resultAction)) {
+      const errorMessage = resultAction.payload || "Đăng nhập thất bại";
+      alert(errorMessage); // <-- sẽ hiển thị "Tài khoản chưa được đăng ký" nếu đúng
     }
-  };
+  } catch (error) {
+    console.error("Login error:", error);
+    alert("Đăng nhập thất bại");
+  }
+};
+
 
   return (
     <div className="relative p-10 grid place-items-center text-[#f9f8fa] ">

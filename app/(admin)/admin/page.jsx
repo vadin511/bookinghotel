@@ -1,13 +1,11 @@
+import HomePageAdmin from "../../../components/admin/homePageAdmin/HomePageAdmin";
 
-const pageAdmin = () => {
+const page = () => {
   return (
     <div>
-       <div className="max-w-4xl mx-auto bg-white shadow p-6 rounded">
-      <h1 className="text-2xl font-bold mb-4">Trang Quản Trị - Dashboard</h1>
-      <p>Chào mừng bạn đến trang quản trị!</p>
-    </div>
+      <HomePageAdmin />
     </div>
   );
 };
 
-export default pageAdmin;
+export default page;
