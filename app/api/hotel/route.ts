@@ -16,13 +16,10 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
-
     const { name, address, description, category_id, type_id } = await req.json();
-
     if (!name || !address) {
       return NextResponse.json({ message: "Tên và địa chỉ là bắt buộc" }, { status: 400 });
     }
-
     const sql = `
       INSERT INTO hotels (name, address, description, manager_id, category_id, type_id)
       VALUES (?, ?, ?, ?, ?, ?)
