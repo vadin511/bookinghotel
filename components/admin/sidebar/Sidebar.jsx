@@ -2,16 +2,15 @@
 
 import { useState } from "react";
 
-const Sidebar = () => {
+const Sidebar = (activeTab) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState("dashboard");
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
   return (
     <div
-      className={`bg-indigo-900 text-white transition-all duration-300 ${
+      className={`bg-[#513821] text-white transition-all duration-300 ${
         sidebarCollapsed ? "w-16" : "w-64"
       }`}
     >
@@ -21,7 +20,7 @@ const Sidebar = () => {
         )}
         <button
           onClick={toggleSidebar}
-          className="p-1 rounded-full hover:bg-indigo-800 cursor-pointer !rounded-button whitespace-nowrap"
+          className="p-1 rounded-full hover:bg-[#4a3320] cursor-pointer !rounded-button whitespace-nowrap"
         >
           <i
             className={`fas ${
@@ -32,28 +31,28 @@ const Sidebar = () => {
       </div>
 
       <nav className="mt-8">
-        <div className="px-4 mb-2 text-xs uppercase text-indigo-300">
+        <div className="px-4 mb-2 text-xs uppercase text-white">
           {!sidebarCollapsed && <span>Tổng Quan</span>}
         </div>
         <a
-          href="#"
+          href="/admin/homeDashboard"
           onClick={() => setActiveTab("dashboard")}
           className={`flex items-center py-3 px-4 ${
-            activeTab === "dashboard" ? "bg-indigo-800" : "hover:bg-indigo-800"
+            activeTab === "dashboard" ? "bg-indigo-800" : "hover:bg-[#4a3320]"
           }`}
         >
           <i className="fas fa-tachometer-alt w-5"></i>
           {!sidebarCollapsed && <span className="ml-3">Dashboard</span>}
         </a>
 
-        <div className="px-4 mb-2 mt-6 text-xs uppercase text-indigo-300">
+        <div className="px-4 mb-2 mt-6 text-xs uppercase text-white">
           {!sidebarCollapsed && <span>Quản Lý</span>}
         </div>
         <a
           href="#"
           onClick={() => setActiveTab("hotels")}
           className={`flex items-center py-3 px-4 ${
-            activeTab === "hotels" ? "bg-indigo-800" : "hover:bg-indigo-800"
+            activeTab === "hotels" ? "bg-indigo-800" : "hover:bg-[#4a3320]"
           }`}
         >
           <i className="fas fa-hotel w-5"></i>
@@ -63,7 +62,7 @@ const Sidebar = () => {
           href="#"
           onClick={() => setActiveTab("rooms")}
           className={`flex items-center py-3 px-4 ${
-            activeTab === "rooms" ? "bg-indigo-800" : "hover:bg-indigo-800"
+            activeTab === "rooms" ? "bg-indigo-800" : "hover:bg-[#4a3320]"
           }`}
         >
           <i className="fas fa-door-open w-5"></i>
@@ -73,7 +72,7 @@ const Sidebar = () => {
           href="#"
           onClick={() => setActiveTab("bookings")}
           className={`flex items-center py-3 px-4 ${
-            activeTab === "bookings" ? "bg-indigo-800" : "hover:bg-indigo-800"
+            activeTab === "bookings" ? "bg-indigo-800" : "hover:bg-[#4a3320]"
           }`}
         >
           <i className="fas fa-calendar-check w-5"></i>
@@ -83,21 +82,21 @@ const Sidebar = () => {
           href="#"
           onClick={() => setActiveTab("users")}
           className={`flex items-center py-3 px-4 ${
-            activeTab === "users" ? "bg-indigo-800" : "hover:bg-indigo-800"
+            activeTab === "users" ? "bg-indigo-800" : "hover:bg-[#4a3320]"
           }`}
         >
           <i className="fas fa-users w-5"></i>
           {!sidebarCollapsed && <span className="ml-3">Người Dùng</span>}
         </a>
 
-        <div className="px-4 mb-2 mt-6 text-xs uppercase text-indigo-300">
+        <div className="px-4 mb-2 mt-6 text-xs uppercase text-white">
           {!sidebarCollapsed && <span>Báo Cáo</span>}
         </div>
         <a
           href="#"
           onClick={() => setActiveTab("reports")}
           className={`flex items-center py-3 px-4 ${
-            activeTab === "reports" ? "bg-indigo-800" : "hover:bg-indigo-800"
+            activeTab === "reports" ? "bg-indigo-800" : "hover:bg-[#4a3320]"
           }`}
         >
           <i className="fas fa-chart-bar w-5"></i>
@@ -107,21 +106,21 @@ const Sidebar = () => {
           href="#"
           onClick={() => setActiveTab("payments")}
           className={`flex items-center py-3 px-4 ${
-            activeTab === "payments" ? "bg-indigo-800" : "hover:bg-indigo-800"
+            activeTab === "payments" ? "bg-indigo-800" : "hover:bg-[#4a3320]"
           }`}
         >
           <i className="fas fa-money-bill-wave w-5"></i>
           {!sidebarCollapsed && <span className="ml-3">Thanh Toán</span>}
         </a>
 
-        <div className="px-4 mb-2 mt-6 text-xs uppercase text-indigo-300">
+        <div className="px-4 mb-2 mt-6 text-xs uppercase text-white">
           {!sidebarCollapsed && <span>Hệ Thống</span>}
         </div>
         <a
           href="#"
           onClick={() => setActiveTab("settings")}
           className={`flex items-center py-3 px-4 ${
-            activeTab === "settings" ? "bg-indigo-800" : "hover:bg-indigo-800"
+            activeTab === "settings" ? "bg-indigo-800" : "hover:bg-[#4a3320]"
           }`}
         >
           <i className="fas fa-cog w-5"></i>

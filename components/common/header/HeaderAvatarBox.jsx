@@ -1,17 +1,18 @@
-
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchUserProfile, logoutUser, selectUser } from "../../../app/store/features/userSlice";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchUserProfile,
+  logoutUser,
+  selectUser,
+} from "../../../app/store/features/userSlice";
 import avatar from "../../../public/assets/images/avatar.jpg";
 
 export default function HeaderAvatarBox() {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-  const router = useRouter();
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
 
@@ -37,7 +38,7 @@ export default function HeaderAvatarBox() {
   const handleSubmit = () => {
     if (!user?.full_name) {
       // Nếu không có user.full_name (chưa đăng nhập) thì chuyển hướng đến trang login
-      window.location.href = "/login"; 
+      window.location.href = "/login";
     } else {
       // Nếu có user.full_name (đã đăng nhập) thì toggle dropdown
       setOpen(!open);
@@ -64,28 +65,36 @@ export default function HeaderAvatarBox() {
     <div className="relative" ref={ref}>
       {/* Avatar tròn */}
       <button
-        className="w-8 h-8 sm:w-8 sm:h-8 rounded-full overflow-hidden border border-gray-300 focus:outline-none"
         onClick={handleSubmit}
+        className="flex items-center space-x-2 px-2 py-1 focus:outline-none bg-transparent"
       >
-        <Image
-          src={user?.avatar || avatar} // Sử dụng avatar của user nếu có, không thì dùng ảnh mặc định
-          alt="User Avatar"
-          className="w-full h-full object-cover"
-          width={32}
-          height={32}
-        />
+        <div className="w-8 h-8 sm:w-8 sm:h-8 rounded-full overflow-hidden">
+          <Image
+            src={user?.avatar || avatar}
+            alt="User Avatar"
+            className="w-full h-full object-cover"
+            width={32}
+            height={32}
+          />
+        </div>
+        <span className="text-sm font-medium text-white">
+          {user?.full_name}
+        </span>
+        {user && <i className="fas fa-chevron-down text-xs text-white"></i>}
       </button>
 
       {/* Box popup chỉ hiển thị khi user đã đăng nhập và open = true */}
       {user?.full_name && open && (
         <div className="absolute right-0 top-10 w-60 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
           <div className="px-4 py-2 text-sm font-medium text-gray-800">
+            <i className="fas fa-user mr-2"></i>
             Xin chào,{" "}
             <Link href="/profile" className="text-blue-600 hover:underline">
               {user.full_name}!
             </Link>
           </div>
-          <div className="px-4 py-2 text-sm text-gray-500 border-t">
+          <div className="px-4 py-2 text-sm">
+            <i class="fa-solid fa-envelope text-gray-800 mr-2"> </i>
             {user.email}
           </div>
           <div className="px-4 py-2 border-t">
@@ -93,7 +102,7 @@ export default function HeaderAvatarBox() {
               onClick={handleLogout}
               className="w-full text-left text-sm cursor-pointer text-red-600 hover:underline"
             >
-              Đăng xuất
+              <i className="fas fa-sign-out-alt mr-2"></i> Đăng xuất
             </button>
           </div>
         </div>
