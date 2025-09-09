@@ -27,7 +27,7 @@ const SearchRoom = () => {
           onChange={(e) => setDestination(e.target.value)}
           className="appearance-none focus:outline-none font-serif rounded-full  cursor-pointer"
         >
-          <option value="">Loại phòng</option>
+          <option value="">Hotels</option>
           {destinations.map((item) => (
             <option key={item.value} value={item.value}>
               {item.label}
@@ -61,7 +61,7 @@ const SearchRoom = () => {
           {/* Icon và nhãn */}
           <div className="flex items-center gap-2">
             <i className="fas fa-user-friends "></i>
-            <span>Trẻ em:</span>
+            <span>Adults:</span>
           </div>
 
           {/* Bộ đếm */}
@@ -86,14 +86,14 @@ const SearchRoom = () => {
       {/* Promotion Toggle */}
       <div className="flex items-center gap-4 space-x-3 border border-gray-300 rounded-full text-[#5a3f26] text-xl font-serif cursor-pointer min-w-[140px] md:min-w-[180px] pl-12 pr-10 py-4 ">
         <i className="fas fa-gift"></i>
-        <span>Khuyến mãi</span>
+        <span>Voucher</span>
       </div>
 
       <button
         className="bg-[#5a3f26] text-white rounded-full text-xl font-serif cursor-pointer min-w-[140px] md:min-w-[180px] px-4 py-2 hover:bg-[#4a3320] transition-colors"
         type="submit"
       >
-        Book
+        Search
       </button>
     </div>
   );

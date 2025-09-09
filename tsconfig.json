@@ -31,7 +31,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "app/lib/auth.js", "app/lib/db.js", "app/api/hotel/[id]/route.js", "app/api/hotel/route.js", "app/api/room/[id]/route.js", "app/api/room/route.js"  ],
   "exclude": [
     "node_modules"
   ]

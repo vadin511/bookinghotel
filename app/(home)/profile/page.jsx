@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../store/features/userSlice";
 
@@ -16,7 +17,7 @@ const ProfilePage = () => {
         // onSubmit={handleSubmit}
         className="max-w-2xl mx-auto space-y-4 p-10 mt-10 mb-10 border rounded bg-white shadow"
       >
-        <h2 className="text-xl font-bold">Thông tin cá nhân</h2>
+        <h2 className="text-xl font-bold">Personal information</h2>
 
         <input
           name="email"
@@ -31,22 +32,8 @@ const ProfilePage = () => {
           // onChange={handleChange}
           className="w-full border p-2 rounded"
         />
-
-        <input
-          type="file"
-          name="avatar_url"
-          // value={formData.phone}
-          // onChange={handleChange}
-          className="w-full border px-3 py-2 rounded"
-        />
-
-        <button
-          type="submit"
-          // disabled={loading}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          {/* {loading ? "Đang cập nhật..." : "Cập nhật"} */}
-        </button>
+       
+          <Link className="bg-blue-600 p-2 rounded text-white " href={"/changePass"}>changePass</Link>
 
         {/* {message && <p className="text-sm mt-2">{message}</p>} */}
       </form>

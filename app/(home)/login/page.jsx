@@ -32,11 +32,18 @@ const LoginPage = () => {
   
   try {
     const resultAction = await dispatch(loginUser({ email, password }));
+    console.log(resultAction,'resultAction');
     
     if (loginUser.fulfilled.match(resultAction)) {
       alert(resultAction.payload.message);
       resetForm();
-      window.location.href = "/";
+      console.log(resultAction.payload.role_id, 'role_id');
+      if (resultAction.payload.role_id === "user") {
+        window.location.href = "/"; 
+      } else if (resultAction.payload.role_id === "admin") {
+        window.location.href = "/admin"; 
+      }
+      
     } else if (loginUser.rejected.match(resultAction)) {
       const errorMessage = resultAction.payload || "Đăng nhập thất bại";
       alert(errorMessage); // <-- sẽ hiển thị "Tài khoản chưa được đăng ký" nếu đúng
@@ -67,10 +74,10 @@ const LoginPage = () => {
           <p className="text-3xl">
             <b>
               {" "}
-              <span className="text-[#2c1c0d]"> Welcome to </span> SAM SON
+              <span className="text-[#2c1c0d]"> Welcome to </span> Bypillow
             </b>
           </p>
-          <p> Rất vui khi được bạn biết đến !</p>
+          <p> Nice to meet you!</p>
         </div>
 
         <div>
@@ -122,10 +129,10 @@ const LoginPage = () => {
             href=""
             className="text-[#b1aca9] text-[17px] hover:text-[#f9f9f9]"
           >
-            Quên mật khẩu ?
+           Forgot password?
           </Link>
           <p className=" text-[17px]">
-            Bạn chưa có tài khoản ?{" "}
+            Don't have an account?{" "}
             <Link
               href={"/register"}
               className="text-[#b98c70] text-[17px] hover:text-[#f9f9f9]"

@@ -78,15 +78,15 @@ export default function RegisterPage() {
       {/* Register form */}
       <div className="relative z-[2] bg-[rgb(6_5_7/25%)] backdrop-blur-[38px] shadow-[0_40px_30px_rgb(0_0_0_/_10%)] rounded-[40px] h-[500px] w-[380px] flex flex-col gap-5 items-center justify-center text-center">
         <div>
-          <p className="text-3xl">Welcome to SAM SON</p>
-          <p>Tạo tài khoản mới để bắt đầu</p>
+          <p className="text-3xl">Welcome to Bypillow</p>
+          <p>Create a new account to get started</p>
         </div>
 
         {step === "register" && (
           <form onSubmit={handleRegister} className="grid gap-3 w-76 ">
             <input
               type="text"
-              placeholder="Tên của bạn"
+              placeholder="Name"
               value={full_name}
               onChange={(e) => setFull_Name(e.target.value)}
               className={`w-full h-14 !pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none
@@ -108,7 +108,7 @@ export default function RegisterPage() {
             />
             <input
               type="password"
-              placeholder="Mật khẩu"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className={`w-full h-14 !pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none
@@ -121,7 +121,7 @@ export default function RegisterPage() {
               type="submit"
               className="h-14 px-4 rounded-lg bg-[#2c1c0d] text-[#f9f9f9] text-lg cursor-pointer hover:bg-[#251f16] transition-colors duration-300"
             >
-              Đăng ký
+              Sign up
             </button>
             {message && (
               <p className="text-sm text-green-400 text-center">{message}</p>
@@ -130,7 +130,7 @@ export default function RegisterPage() {
         )}
         <div className="flex flex-col gap-10">
           <p className=" text-[17px]">
-            Bạn đã có tài khoản rồi ?{" "}
+            Do you already have an account?{" "}
             <Link
               href={"/login"}
               className="text-[#b98c70] text-[17px] hover:text-[#f9f9f9]"
@@ -145,7 +145,7 @@ export default function RegisterPage() {
             <input
               value={otp}
               onChange={(e) => setOTP(e.target.value)}
-              placeholder="Nhập mã OTP"
+              placeholder="Enter OTP code"
               className={`w-full h-14 !pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none
                 focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d]
                 ${otp ? "bg-[#E8F0FE] text-black" : ""}
@@ -156,7 +156,7 @@ export default function RegisterPage() {
               onClick={handleVerifyOTP}
               className="h-14 px-4 rounded-lg bg-[#2c1c0d] text-[#f9f9f9] text-lg cursor-pointer hover:bg-[#251f16] transition-colors duration-300"
             >
-              Xác nhận OTP
+              OTP Confirmation
             </button>
           </div>
         )}

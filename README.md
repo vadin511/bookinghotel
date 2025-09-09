@@ -1,1 +1,0 @@
-xóa phnone trong bảng user

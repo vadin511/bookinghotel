@@ -36,7 +36,7 @@ export default function HeaderAvatarBox() {
   }, [ref]);
 
   const handleSubmit = () => {
-    if (!user?.full_name) {
+    if (!user) {
       // Nếu không có user.full_name (chưa đăng nhập) thì chuyển hướng đến trang login
       window.location.href = "/login";
     } else {
@@ -94,7 +94,7 @@ export default function HeaderAvatarBox() {
             </Link>
           </div>
           <div className="px-4 py-2 text-sm">
-            <i class="fa-solid fa-envelope text-gray-800 mr-2"> </i>
+            <i className="fa-solid fa-envelope text-gray-800 mr-2"> </i>
             {user.email}
           </div>
           <div className="px-4 py-2 border-t">

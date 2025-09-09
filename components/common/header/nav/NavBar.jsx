@@ -10,15 +10,15 @@ const NavBar = () => {
           href="/"
           className="hover:text-blue-500 transition-colors duration-300"
         >
-          Trang chủ
+          Home
         </Link>
       </li>
       <li>
         <Link
-          href="/products"
+          href="/hotels"
           className="hover:text-blue-500 transition-colors duration-300"
         >
-          Sản phẩm
+          Hotels 
         </Link>
       </li>
       <li>
@@ -26,7 +26,7 @@ const NavBar = () => {
           href="/services"
           className="hover:text-blue-500 transition-colors duration-300"
         >
-          Dịch vụ
+          Services
         </Link>
       </li>
       <li>
@@ -34,7 +34,7 @@ const NavBar = () => {
           href="/contact"
           className="hover:text-blue-500 transition-colors duration-300"
         >
-          Liên hệ
+          Contact
         </Link>
       </li>
     </ul>

@@ -1,9 +1,9 @@
-// app/api/rooms/route.ts
+// app/api/rooms/route.js
 import { NextResponse } from "next/server";
-import db from "../../lib/db";
 import { getUserFromToken } from "../../lib/auth";
+import db from "../../lib/db";
 
-export async function POST(req: Request) {
+export async function POST(req) {
   try {
     const user = getUserFromToken(req);
     if (!user) {
@@ -49,7 +49,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Lỗi server" }, { status: 500 });
   }
 }
-
 
 export async function GET() {
   try {

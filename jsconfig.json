@@ -37,7 +37,7 @@
     "app/(home)/changePass/route.jsx",
     "app/(home)/changePass/page.jsx",
     "components/admin/dashboard/page.jsx",
-    "app/lib/db.ts",
+    "app/lib/db.js",
     "app/(home)/List/page.jsx",
     "app/(home)/login/page.jsx",
     "app/products/page.jsx",
@@ -48,6 +48,6 @@
     "app/layout.jsx",
     "app/page.jsx",
     "next.config.js"
-, "components/common/header/HeaderAvatarBox.jsx"  ],
+, "components/common/header/HeaderAvatarBox.jsx", "app/lib/auth.js", "app/api/hotel/[id]/route.js", "app/api/hotel/route.js", "app/api/room/[id]/route.js", "app/api/room/route.js"  ],
   "exclude": ["node_modules"]
 }

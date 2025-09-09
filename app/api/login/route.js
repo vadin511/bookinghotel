@@ -39,6 +39,8 @@ export async function POST(req) {
   const [rows] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
   const user = rows[0];
 
+
+  
   if (!user || !bcrypt.compareSync(password, user.password)) {
     return NextResponse.json(
       { message: "Sai tài khoản hoặc mật khẩu", access: false },
@@ -62,6 +64,7 @@ export async function POST(req) {
   JSON.stringify({
     message: "Đăng nhập thành công",
     access: true,
+      role_id: user.role_id,
   }),
   {
     status: 200,
@@ -73,7 +76,7 @@ export async function POST(req) {
 
 response.cookies.set("token", token, {
   httpOnly: true,
-  secure: process.env.NODE_ENV !== "development", // <-- sửa chỗ này nữa
+  secure: process.env.NODE_ENV !== "development",
   path: "/",
   maxAge: 60 * 60,
 });
