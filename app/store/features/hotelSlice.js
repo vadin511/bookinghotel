@@ -18,7 +18,8 @@ export const addHotel = createAsyncThunk("hotels/addHotel", async (hotelData) =>
 // --- Update hotel
 export const updateHotel = createAsyncThunk("hotels/updateHotel", async ({ id, data }) => {
   const res = await axios.put(`/api/hotel/${id}`, data);
-  return { id, ...data }; // giả định server không trả về dữ liệu mới
+  // Trả về dữ liệu từ server nếu có, nếu không thì merge với data gửi lên
+  return res.data && res.data.id ? res.data : { id, ...data, ...res.data };
 });
 
 // --- Delete hotel
@@ -58,8 +59,23 @@ const hotelSlice = createSlice({
       })
 
       // --- Add
+      .addCase(addHotel.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(addHotel.fulfilled, (state, action) => {
-        state.data.push(action.payload.result || action.payload);
+        state.loading = false;
+        // Thêm khách sạn mới vào danh sách
+        const newHotel = action.payload;
+        if (newHotel && newHotel.id) {
+          state.data.push(newHotel);
+        } else if (action.payload.result) {
+          state.data.push(action.payload.result);
+        }
+      })
+      .addCase(addHotel.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
       })
 
       // --- Update

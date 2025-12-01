@@ -1,12 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "swiper/css";
-@import "swiper/css/navigation";
 @import "swiper/css/pagination";
 
 * {
-  /* font-family: "Roboto Slab",'Merriweather', serif; */
-  font-family: "Merriweather", serif;
+  font-family: "inherit";
 }
 @layer base {
   h1,
@@ -105,6 +103,42 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Font Family Variables */
+  --mirai-ui-font-bold: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mirai-ui-font-regular: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Font Weight Variables */
+  --mirai-ui-font-bold-weight: 700;
+  --mirai-ui-font-semibold-weight: 600;
+  --mirai-ui-font-medium-weight: 500;
+  --mirai-ui-font-regular-weight: 400;
+
+  /* Font Size Variables - Headlines */
+  --mirai-ui-font-size-headline-1: 2.5rem; /* 40px */
+  --mirai-ui-font-size-headline-2: 2rem; /* 32px */
+  --mirai-ui-font-size-headline-3: 1.75rem; /* 28px */
+  --mirai-ui-font-size-headline-4: 1.5rem; /* 24px */
+  --mirai-ui-font-size-headline-5: 1.25rem; /* 20px */
+  --mirai-ui-font-size-headline-6: 1.125rem; /* 18px */
+
+  /* Line Height Variables */
+  --mirai-ui-line-height-headline-1: 1.2;
+  --mirai-ui-line-height-headline-2: 1.25;
+  --mirai-ui-line-height-headline-3: 1.3;
+  --mirai-ui-line-height-headline-4: 1.35;
+  --mirai-ui-line-height-headline-5: 1.4;
+  --mirai-ui-line-height-headline-6: 1.45;
+
+  /* Body Text Sizes */
+  --mirai-ui-font-size-body-large: 1.125rem; /* 18px */
+  --mirai-ui-font-size-body: 1rem; /* 16px */
+  --mirai-ui-font-size-body-small: 0.875rem; /* 14px */
+
+  /* Body Line Heights */
+  --mirai-ui-line-height-body-large: 1.6;
+  --mirai-ui-line-height-body: 1.5;
+  --mirai-ui-line-height-body-small: 1.4;
 }
 
 .dark {
@@ -146,37 +180,64 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-medium;
   }
 }
 
 /* Trong globals.css hoặc trong style nội bộ */
+.custom-swiper {
+  overflow: hidden;
+}
+
+.custom-swiper .swiper-wrapper {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-swiper .swiper-pagination {
+  bottom: 20px !important;
+  z-index: 10;
+}
+
 .custom-swiper .swiper-pagination-bullet {
-  @apply w-4 h-4 bg-white opacity-50 rounded-full mx-1 transition;
+  @apply w-3 h-3 bg-white opacity-50 rounded-full mx-1.5 transition-all duration-300;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .custom-swiper .swiper-pagination-bullet-active {
-  @apply opacity-100 scale-110;
-}
-/* banner chính */
-@keyframes zoom-in {
-  from {
-    transform: scale(1);
-  }
-  to {
-    transform: scale(1.1);
-  }
+  @apply opacity-100;
+  transform: scale(1.3);
+  background: white;
 }
 
-/* Hiệu ứng scale ảnh khi slide active */
-.custom-swiper .swiper-slide img {
+/* Banner chính - Smooth fade effect */
+.custom-swiper .swiper-slide {
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+.custom-swiper .swiper-slide-active {
+  opacity: 1;
+}
+
+/* Hiệu ứng zoom mượt cho ảnh */
+.custom-swiper .swiper-slide img,
+.custom-swiper .swiper-slide span {
+  will-change: transform;
   transform: scale(1);
-  transition: transform 5s ease-in-out ;
-  animation: zoom-in 5s ease-in-out forwards;
+  transition: transform 8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.custom-swiper .swiper-slide-active img {
-  transform: scale(1.1);
+.custom-swiper .swiper-slide-active img,
+.custom-swiper .swiper-slide-active span {
+  transform: scale(1.05);
+}
+
+/* Đảm bảo ảnh không bị vỡ */
+.custom-swiper .swiper-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* banner phụ */
@@ -216,4 +277,154 @@
 
 .animate-slideDown {
   animation: slideDown 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+/* Sidebar scrollbar styling */
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+
+.sidebar-scroll:hover {
+  scrollbar-color: #4a3320 #513821;
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+  width: 2px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 1px;
+}
+
+.sidebar-scroll:hover::-webkit-scrollbar-track {
+  background: #513821;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 1px;
+  min-height: 20px;
+}
+
+.sidebar-scroll:hover::-webkit-scrollbar-thumb {
+  background: #4a3320;
+  border-radius: 1px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: #3d2a1a;
+}
+
+/* Hotel Image Swiper - No navigation arrows, custom pagination */
+.hotel-image-swiper {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.hotel-image-swiper .swiper-wrapper {
+  height: 100% !important;
+}
+
+.hotel-image-swiper .swiper-slide {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.hotel-image-swiper .swiper-pagination {
+  bottom: 10px !important;
+  left: 50% !important;
+  transform: translateX(-50%);
+  width: auto !important;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  z-index: 10;
+}
+
+.hotel-image-swiper .swiper-pagination-bullet {
+  width: 10px !important;
+  height: 10px !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  opacity: 0.7 !important;
+  transition: all 0.3s ease;
+  margin: 0 3px !important;
+  border-radius: 50% !important;
+  cursor: pointer;
+}
+
+.hotel-image-swiper .swiper-pagination-bullet-active {
+  background: #ffffff !important;
+  opacity: 1 !important;
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.4);
+}
+
+/* Font Utility Classes */
+.bold:not(.brand) {
+  font-family: var(--mirai-ui-font-bold);
+  font-weight: var(--mirai-ui-font-bold-weight);
+}
+
+.headline-1 {
+  font-size: var(--mirai-ui-font-size-headline-1);
+  line-height: var(--mirai-ui-line-height-headline-1);
+}
+
+.headline-2 {
+  font-size: var(--mirai-ui-font-size-headline-2);
+  line-height: var(--mirai-ui-line-height-headline-2);
+}
+
+.headline-3 {
+  font-size: var(--mirai-ui-font-size-headline-3);
+  line-height: var(--mirai-ui-line-height-headline-3);
+}
+
+.headline-4 {
+  font-size: var(--mirai-ui-font-size-headline-4);
+  line-height: var(--mirai-ui-line-height-headline-4);
+}
+
+.headline-5 {
+  font-size: var(--mirai-ui-font-size-headline-5);
+  line-height: var(--mirai-ui-line-height-headline-5);
+}
+
+.headline-6 {
+  font-size: var(--mirai-ui-font-size-headline-6);
+  line-height: var(--mirai-ui-line-height-headline-6);
+}
+
+.body-large {
+  font-size: var(--mirai-ui-font-size-body-large);
+  line-height: var(--mirai-ui-line-height-body-large);
+}
+
+.body {
+  font-size: var(--mirai-ui-font-size-body);
+  line-height: var(--mirai-ui-line-height-body);
+}
+
+.body-small {
+  font-size: var(--mirai-ui-font-size-body-small);
+  line-height: var(--mirai-ui-line-height-body-small);
 }

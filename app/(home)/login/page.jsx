@@ -1,16 +1,26 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "react-toastify";
 import bgLogin from "../../../public/assets/images/bgLogin.png";
-import { loginUser, selectLoginStatus } from "../../store/features/userSlice";
+import { loginUser, selectLoginStatus, resetLoginStatus } from "../../store/features/userSlice";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const dispatch = useDispatch();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const loginStatus = useSelector(selectLoginStatus);
+  const redirectUrl = searchParams.get("redirect");
+
+  // Reset login status when component mounts (when navigating back to login page)
+  useEffect(() => {
+    dispatch(resetLoginStatus());
+  }, [dispatch]);
 
   const resetForm = () => {
     setEmail("");
@@ -27,32 +37,33 @@ const LoginPage = () => {
     }
   };
 
- const handleLogin = async (e) => {
-  e.preventDefault();
-  
-  try {
-    const resultAction = await dispatch(loginUser({ email, password }));
-    console.log(resultAction,'resultAction');
+  const handleLogin = async (e) => {
+    e.preventDefault();
     
-    if (loginUser.fulfilled.match(resultAction)) {
-      alert(resultAction.payload.message);
-      resetForm();
-      console.log(resultAction.payload.role_id, 'role_id');
-      if (resultAction.payload.role_id === "user") {
-        window.location.href = "/"; 
-      } else if (resultAction.payload.role_id === "admin") {
-        window.location.href = "/admin"; 
-      }
+    try {
+      const resultAction = await dispatch(loginUser({ email, password }));
       
-    } else if (loginUser.rejected.match(resultAction)) {
-      const errorMessage = resultAction.payload || "Đăng nhập thất bại";
-      alert(errorMessage); // <-- sẽ hiển thị "Tài khoản chưa được đăng ký" nếu đúng
+      if (loginUser.fulfilled.match(resultAction)) {
+        toast.success(resultAction.payload.message);
+        resetForm();
+        
+        // Nếu có redirect URL, quay về trang đó
+        if (redirectUrl) {
+          router.push(redirectUrl);
+        } else if (resultAction.payload.role === "user") {
+          router.push("/"); 
+        } else if (resultAction.payload.role === "admin") {
+          router.push("/admin"); 
+        }
+        
+      } else if (loginUser.rejected.match(resultAction)) {
+        const errorMessage = resultAction.payload || "Đăng nhập thất bại";
+        toast.error(errorMessage);
+      }
+    } catch (error) {
+      toast.error("Đăng nhập thất bại");
     }
-  } catch (error) {
-    console.error("Login error:", error);
-    alert("Đăng nhập thất bại");
-  }
-};
+  };
 
 
   return (
@@ -71,13 +82,13 @@ const LoginPage = () => {
       <div className=" z-[2] bg-[rgb(6_5_7/25%)]  backdrop-blur-[38px] shadow-[0_40px_30px_rgb(0_0_0_/_10%)] rounded-[40px] h-[500px] w-[380px] flex flex-col gap-5 items-center justify-center text-center">
         {/* <img src="" alt="Logo" className="w-[74px] mb-8" /> */}
         <div>
-          <p className="text-3xl">
+          <p className="text-4xl">
             <b>
               {" "}
-              <span className="text-[#2c1c0d]"> Welcome to </span> Bypillow
+              <span className="text-[#2c1c0d]"> Chào mừng đến với </span> VadiGo
             </b>
           </p>
-          <p> Nice to meet you!</p>
+          <p className="text-lg"> Rất vui được gặp bạn!</p>
         </div>
 
         <div>
@@ -104,7 +115,7 @@ const LoginPage = () => {
                 type="password"
                 id="password-input"
                 autoComplete="new-password"
-                placeholder="Password"
+                placeholder="Mật khẩu"
                 value={password}
                 onChange={handleChange}
                 className={`w-full h-14 !pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none
@@ -117,9 +128,9 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={loginStatus === 'loading'}
-              className="h-14 px-4 rounded-lg bg-[#2c1c0d] text-[#f9f9f9] text-lg cursor-pointer relative overflow-hidden hover:bg-[#251f16] transition-colors duration-300"
+              className="h-14 px-4 rounded-lg bg-[#2c1c0d] text-[#f9f9f9] text-xl cursor-pointer relative overflow-hidden hover:bg-[#251f16] transition-colors duration-300"
             >
-              {loginStatus === 'loading' ? 'Đang đăng nhập...' : 'Login'}
+              {loginStatus === 'loading' ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </button>
           </form>
         </div>
@@ -127,17 +138,17 @@ const LoginPage = () => {
         <div className="flex flex-col gap-5">
           <Link
             href=""
-            className="text-[#b1aca9] text-[17px] hover:text-[#f9f9f9]"
+            className="text-[#b1aca9] text-lg hover:text-[#f9f9f9]"
           >
-           Forgot password?
+           Quên mật khẩu?
           </Link>
-          <p className=" text-[17px]">
-            Don't have an account?{" "}
+          <p className=" text-lg">
+            Chưa có tài khoản?{" "}
             <Link
               href={"/register"}
-              className="text-[#b98c70] text-[17px] hover:text-[#f9f9f9]"
+              className="text-[#b98c70] text-lg hover:text-[#f9f9f9]"
             >
-              Sign up!
+              Đăng ký ngay!
             </Link>
           </p>
         </div>

@@ -28,27 +28,25 @@ export async function POST(req) {
       );
     }
 
-    const { full_name, email, password } = JSON.parse(tempUser);
+    const { name, email, password } = JSON.parse(tempUser);
 
     // Giá trị mặc định
-    const avatar_url = null;
-    const role_id = "user";
-    const created_at = new Date();
-    const updated_at = null;
+    const avatar = null;
+    const role = "user";
+    const status = "active";
 
     const query = `
       INSERT INTO users 
-      (full_name, email, password, avatar_url, role_id, created_at, updated_at) 
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      (name, email, password, avatar, role, status, created_at) 
+      VALUES (?, ?, ?, ?, ?, ?, NOW())
     `;
     const values = [
-      full_name,
+      name,
       email,
       password,
-      avatar_url,
-      role_id,
-      created_at,
-      updated_at,
+      avatar,
+      role,
+      status,
     ];
 
     await db.query(query, values);

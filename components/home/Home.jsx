@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import CategoryHotel from "../home/categoryhotel/CategoryHotel";
 import BannerNews from "./bannerNews/BannerNews";
 import BannerSlider from "./bannerSlider/BannerSlider";
-import CategorySlider from "./categorySlider/CategorySlider";
 import IntroHome from "./introHome/IntroHome";
+import LatestPosts from "./latestPosts/LatestPosts";
 import SearchRoom from "./searchRoom/SearchRoom";
+import DestinationPlanning from "./destinationPlanning/DestinationPlanning";
 
 const Home = () => {
   const [isFixed, setIsFixed] = useState(false);
@@ -42,21 +43,23 @@ const Home = () => {
 
   return (
     <div>
-      {/* Slider + SearchRoom */}
-      <div ref={bannerRef} className="relative h-[600px]">
+      {/* Slider */}
+      <div ref={bannerRef} className="relative -mt-12 sm:-mt-16 md:-mt-20">
         <BannerSlider />
-        {!isFixed && (
-          <div className="absolute bottom-[5%] left-1/2 transform -translate-x-1/2 z-30 container max-w-7xl mx-auto w-full ">
-            <SearchRoom />
-          </div>
-        )}
       </div>
+
+      {/* SearchRoom - Nằm giữa slider và nội dung */}
+      {!isFixed && (
+        <div className="container max-w-7xl mx-auto -mt-3 sm:-mt-7 md:-mt-11 lg:-mt-15 relative z-30 px-2 sm:px-4">
+          <SearchRoom />
+        </div>
+      )}
 
       {/* SearchRoom Fixed khi cuộn */}
       {isFixed && (
         <div
           ref={searchRef}
-          className="fixed top-[60px] left-1/2 transform -translate-x-1/2 z-50 container max-w-7xl mx-auto w-full transition-all duration-300"
+          className="fixed top-[60px] sm:top-[70px] md:top-[80px] left-1/2 transform -translate-x-1/2 z-50 container max-w-7xl mx-auto w-full transition-all duration-300 px-2 sm:px-4"
         >
           <div>
             <SearchRoom />
@@ -65,12 +68,21 @@ const Home = () => {
       )}
 
       {/* Nội dung chính */}
-      <div className="container max-w-7xl mx-auto mt-50 mb-10" ref={introRef}>
+      <div className="container max-w-7xl mx-auto mt-5 mb-10 px-2 sm:px-4" ref={introRef}>
         <IntroHome />
         <CategoryHotel />
-        <CategorySlider />
-        <BannerNews />
       </div>
+      
+      {/* DestinationPlanning - Full width */}
+      <DestinationPlanning />
+      
+      {/* Nội dung tiếp theo */}
+      <div className="container max-w-7xl mx-auto mb-10 px-2 sm:px-4">
+        <LatestPosts />
+      </div>
+      
+      {/* BannerNews - Full width */}
+      <BannerNews />
     </div>
   );
 };

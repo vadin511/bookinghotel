@@ -1,8 +1,9 @@
 export interface UserPayload {
   id: number;
   email: string;
-  full_name: string;
-  avatar_url: string | null;
+  name: string;
+  avatar: string | null;
+  role: string;
   iat: number;
   exp: number;
 }

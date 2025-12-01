@@ -1,64 +1,101 @@
-import Image from "next/image";
-import imgBannerNews from "../../../public/assets/images/imgBannerNews.jpg";
-
 const BannerNews = () => {
   return (
     <div className="pt-[40px] pb-[40px]">
-      <div className=" bg-[#f1ede8] rounded-lg p-8 text-center text-[#5a4634] select-none">
-        <p className="mb-10 text-2xl leading-relaxed">
-          Booking through our website will open many
-          <br />
-          doors for you. You will receive very important advantages.
-        </p>
-        <div className="flex flex-row justify-evenly items-center">
-          <div className=" flex-row gap-10 justify-evenly  space-x-12">
-            <div className="flex flex-col  items-center text-2xl  mb-8 md:mb-0">
-              <span className="mb-1 text-2xl">①</span>
-              <p>
-                <strong>Mejor precio</strong>
-                <br />
-                You will enjoy a more economical stay.sdfdsvdsvsdvsdv
-              </p>
+      <div className="bg-white overflow-hidden select-none">
+        {/* Header Section - Dark Brown - Full width */}
+        <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#472E1E] text-white text-center py-6 px-4">
+          <p className="text-2xl md:text-3xl leading-relaxed max-w-7xl mx-auto">
+            Đặt phòng qua VadiGo sẽ mở ra nhiều cơ hội cho bạn, bạn sẽ nhận được siêu nhiều ưu đãi quan trọng
+          </p>
+        </div>
+
+        {/* Main Content Section - White Background */}
+        <div className="bg-white p-8 md:p-12 relative min-h-[600px] md:min-h-[700px] max-w-7xl mx-auto">
+
+
+          {/* Circular Dashed Path - Background, nằm trên máy bay nhưng dưới các benefit boxes */}
+          <svg
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] h-[90%] max-w-[700px] max-h-[700px] z-[2]"
+            viewBox="0 0 400 400"
+            preserveAspectRatio="xMidYMid meet"
+          >
+            <ellipse
+              cx="200"
+              cy="200"
+              rx="180"
+              ry="180"
+              fill="none"
+              stroke="#9ca3af"
+              strokeWidth="2"
+              strokeDasharray="8,4"
+              opacity="0.5"
+            />
+          </svg>
+
+          {/* <Image src="/images/airplane.png" alt="airplane" width={100} height={100} /> */}
+
+          {/* Benefit 1 - Top Left */}
+          <div className="absolute top-[8%] left-[8%] md:top-[5%] md:left-[10%] flex flex-col items-center max-w-[200px] md:max-w-[250px] z-10">
+            <div className="bg-[#472E1E] text-white w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded mb-3 text-xl md:text-2xl font-bold">
+              1
             </div>
-            <div className="flex flex-col items-center text-2xl  mb-8 md:mb-0">
-              <span className="mb-1 text-2xl">②</span>
-              <p>
-                <strong>Free cancellation 24h.</strong>
-                <br />
-                If you have to cancel, it’s free for you.
-              </p>
-            </div>
+            <p className="text-base md:text-xl text-center text-[#472E1E]">
+              <strong className="block mb-2">Giá tốt nhất</strong>
+              <span className="text-sm md:text-base font-normal">
+                Bạn sẽ tận hưởng một kỳ nghỉ tiết kiệm hơn
+              </span>
+            </p>
           </div>
-          <div className="hidden md:block max-w-[360px]">
-            <Image alt="imgBannerNews" src={imgBannerNews} />
+
+          {/* Benefit 2 - Bottom Left */}
+          <div className="absolute bottom-[18%] left-[8%] md:bottom-[12%] md:left-[10%] flex flex-col items-center max-w-[200px] md:max-w-[250px] z-10">
+            <div className="bg-[#472E1E] text-white w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded mb-3 text-xl md:text-2xl font-bold">
+              2
+            </div>
+            <p className="text-base md:text-xl text-center text-[#472E1E]">
+              <strong className="block mb-2">Hủy miễn phí trong 24h</strong>
+              <span className="text-sm md:text-base font-normal">
+                Nếu bạn phải hủy, hoàn toàn miễn phí cho bạn
+              </span>
+            </p>
           </div>
-          <div className=" gap-10 md:flex-row md:justify-center md:items-center md:space-x-12 mt-6 mb-6">
-            <div className="flex flex-col items-center text-2xl  mb-8 md:mb-0">
-              <span className="mb-1 text-2xl">③</span>
-              <p>
-                <strong>Better room</strong>
-                <br />
-                the room category for free. If there is availability.ory for
-                free.
-              </p>
+
+          {/* Benefit 3 - Top Right */}
+          <div className="absolute top-[8%] right-[8%] md:top-[5%] md:right-[10%] flex flex-col items-center max-w-[200px] md:max-w-[250px] z-10">
+            <div className="bg-[#472E1E] text-white w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded mb-3 text-xl md:text-2xl font-bold">
+              3
             </div>
-            <div className="flex flex-col items-center text-2xl  mb-8 md:mb-0">
-              <span className="mb-1 text-2xl">④</span>
-              <p>
-                <strong>Free Late Checkout</strong>
-                <br />
-                Si la habitación está disponible,you can extend for a few hours
-                .
-              </p>
+            <p className="text-base md:text-xl text-center text-[#472E1E]">
+              <strong className="block mb-2">Phòng tốt hơn</strong>
+              <span className="text-sm md:text-base font-normal">
+                Nếu còn phòng trống, cho phép bạn nâng cấp hạng phòng miễn phí
+              </span>
+            </p>
+          </div>
+
+          {/* Benefit 4 - Bottom Right */}
+          <div className="absolute bottom-[18%] right-[8%] md:bottom-[12%] md:right-[10%] flex flex-col items-center max-w-[200px] md:max-w-[250px] z-10">
+            <div className="bg-[#472E1E] text-white w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded mb-3 text-xl md:text-2xl font-bold">
+              4
             </div>
+            <p className="text-base md:text-xl text-center text-[#472E1E]">
+              <strong className="block mb-2">Trả phòng muộn miễn phí</strong>
+              <span className="text-sm md:text-base font-normal">
+                Nếu còn phòng trống, bạn có thể ra hạn thêm vài giờ
+              </span>
+            </p>
+          </div>
+
+          {/* Call to Action Button */}
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
+            <button
+              className="bg-[#472E1E] text-white text-lg md:text-xl font-semibold rounded-lg px-6 md:px-8 py-3 hover:bg-[#3a2418] transition-colors"
+              type="button"
+            >
+              Xem ưu đãi
+            </button>
           </div>
         </div>
-        <button
-          className="mt-8 bg-[#5a4634] text-white text-2xl font-semibold rounded-full px-6 py-2"
-          type="button"
-        >
-          See Offers
-        </button>
       </div>
     </div>
   );

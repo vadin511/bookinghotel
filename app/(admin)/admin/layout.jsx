@@ -13,14 +13,24 @@ const AdminLayout = ({ children }) => {
   const user = useSelector(selectUser);
 
   useEffect(() => {
-    dispatch(fetchUserProfile());
-  }, [dispatch]);
+    // Chỉ fetch user profile một lần khi mount
+    if (!user) {
+      dispatch(fetchUserProfile());
+    }
+  }, [dispatch]); // Chỉ chạy khi dispatch thay đổi
 
-useEffect(() => {
-  if (user && user.role_id !== "admin") {
-    router.push("/login");
-  }
-}, [user]);
+  useEffect(() => {
+    // Kiểm tra user sau khi đã fetch
+    if (user === null) {
+      // User đã được fetch nhưng null, có thể token hết hạn
+      // Không làm gì ở đây, để fetchUserProfile tự xử lý refresh
+      return;
+    }
+    
+    if (user && user.role !== "admin") {
+      router.push("/login");
+    }
+  }, [user, router]);
 
 
  

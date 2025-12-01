@@ -17,8 +17,10 @@ export async function GET() {
 
 export async function POST(req) {
   try {
-    const { full_name, email, password } = await req.json();
-    if (!full_name || !email || !password) {
+    const body = await req.json();
+    const { name, email, password, skipOTP } = body;
+    
+    if (!name || !email || !password) {
       return NextResponse.json({ message: 'Vui lòng nhập đầy đủ thông tin' }, { status: 400 });
     }
 
@@ -28,14 +30,31 @@ export async function POST(req) {
       return NextResponse.json({ message: 'Email đã tồn tại. Vui lòng đăng nhập hoặc dùng email khác.' }, { status: 400 });
     }
 
-    // ✅ Nếu chưa tồn tại, tạo OTP và gửi email
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Nếu skipOTP = true (admin tạo user), tạo user trực tiếp
+    if (skipOTP) {
+      const [result] = await db.query(
+        'INSERT INTO users (name, email, password, role, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())',
+        [name, email, hashedPassword, body.role || 'user']
+      );
+
+      const [newUser] = await db.query('SELECT * FROM users WHERE id = ?', [result.insertId]);
+      const user = newUser[0];
+      delete user.password;
+
+      return NextResponse.json({ 
+        message: 'Tạo người dùng thành công', 
+        user 
+      });
+    }
+
+    // ✅ Nếu không skip OTP (đăng ký thông thường), tạo OTP và gửi email
     const otp = generateOTP(OTP_SECRET);
     await sendOTPEmail(email, otp);
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const res = NextResponse.json({ message: 'Đã gửi mã OTP. Vui lòng kiểm tra email.', step: 'otp' });
-    res.cookies.set('temp_user', JSON.stringify({ full_name, email, password: hashedPassword }), {
+    res.cookies.set('temp_user', JSON.stringify({ name, email, password: hashedPassword }), {
       httpOnly: true,
       secure: process.env.NODE_ENV !== 'development',
       path: '/',

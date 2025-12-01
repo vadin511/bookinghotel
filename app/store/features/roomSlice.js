@@ -164,7 +164,17 @@ const roomSlice = createSlice({
       })
       .addCase(addRoom.fulfilled, (state, action) => {
         state.loading = false;
-        state.list.push(action.payload);
+        const newRoom = action.payload;
+        // Thêm vào list
+        state.list.push(newRoom);
+        // Thêm vào hotelRooms nếu phòng thuộc về một khách sạn đang được hiển thị
+        if (newRoom.hotel_id && state.hotelRooms.length > 0) {
+          // Kiểm tra xem có phòng nào trong hotelRooms cùng hotel_id không
+          const firstHotelRoom = state.hotelRooms[0];
+          if (firstHotelRoom && firstHotelRoom.hotel_id === newRoom.hotel_id) {
+            state.hotelRooms.push(newRoom);
+          }
+        }
       })
       .addCase(addRoom.rejected, (state, action) => {
         state.loading = false;
@@ -178,9 +188,23 @@ const roomSlice = createSlice({
       })
       .addCase(updateRoom.fulfilled, (state, action) => {
         state.loading = false;
-        state.list = state.list.map((room) =>
-          room.id === action.payload.id ? action.payload : room
-        );
+        // Server trả về dữ liệu phòng đã cập nhật
+        const updatedRoom = action.payload;
+        
+        if (updatedRoom && updatedRoom.id) {
+          // Cập nhật trong list
+          state.list = state.list.map((room) =>
+            room.id === updatedRoom.id ? updatedRoom : room
+          );
+          // Cập nhật roomDetail nếu đang hiển thị phòng này
+          if (state.roomDetail && state.roomDetail.id === updatedRoom.id) {
+            state.roomDetail = updatedRoom;
+          }
+          // Cập nhật trong hotelRooms nếu có
+          state.hotelRooms = state.hotelRooms.map((room) =>
+            room.id === updatedRoom.id ? updatedRoom : room
+          );
+        }
       })
 
       .addCase(updateRoom.rejected, (state, action) => {
@@ -195,7 +219,15 @@ const roomSlice = createSlice({
       })
       .addCase(deleteRoom.fulfilled, (state, action) => {
         state.loading = false;
-        state.list = state.list.filter((room) => room.id !== action.payload);
+        const deletedId = action.payload;
+        // Xóa khỏi list
+        state.list = state.list.filter((room) => room.id !== deletedId);
+        // Xóa khỏi hotelRooms nếu có
+        state.hotelRooms = state.hotelRooms.filter((room) => room.id !== deletedId);
+        // Xóa roomDetail nếu đang hiển thị phòng này
+        if (state.roomDetail && state.roomDetail.id === deletedId) {
+          state.roomDetail = null;
+        }
       })
       .addCase(deleteRoom.rejected, (state, action) => {
         state.loading = false;

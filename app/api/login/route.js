@@ -39,8 +39,7 @@ export async function POST(req) {
   const [rows] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
   const user = rows[0];
 
-
-  
+  // Kiểm tra user có tồn tại và mật khẩu đúng không
   if (!user || !bcrypt.compareSync(password, user.password)) {
     return NextResponse.json(
       { message: "Sai tài khoản hoặc mật khẩu", access: false },
@@ -48,23 +47,47 @@ export async function POST(req) {
     );
   }
 
-  const token = jwt.sign(
+  // Kiểm tra tài khoản có bị vô hiệu hóa không
+  if (user.status === 'blocked') {
+    return NextResponse.json(
+      { 
+        message: "Tài khoản của bạn đã bị vô hiệu hóa, vui lòng liên hệ với tổng đài VadiGo để được sử dụng", 
+        access: false 
+      },
+      { status: 403 }
+    );
+  }
+
+  // Tạo access token (7 ngày)
+  const accessToken = jwt.sign(
     {
       id: user.id,
       email: user.email,
-      full_name: user.full_name,
-      avatar_url: user.avatar_url,
-      role_id: user.role_id,
+      name: user.name,
+      avatar: user.avatar,
+      role: user.role,
+      type: "access",
     },
     jwtKey,
-    { expiresIn: "1h" }
+    { expiresIn: "7d" }
+  );
+
+  // Tạo refresh token (30 ngày)
+  const refreshToken = jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+      type: "refresh",
+    },
+    jwtKey,
+    { expiresIn: "30d" }
   );
 
   const response = new NextResponse(
   JSON.stringify({
     message: "Đăng nhập thành công",
     access: true,
-      role_id: user.role_id,
+      role: user.role,
   }),
   {
     status: 200,
@@ -74,11 +97,20 @@ export async function POST(req) {
   }
 );
 
-response.cookies.set("token", token, {
+// Set access token cookie (7 ngày)
+response.cookies.set("token", accessToken, {
   httpOnly: true,
   secure: process.env.NODE_ENV !== "development",
   path: "/",
-  maxAge: 60 * 60,
+  maxAge: 60 * 60 * 24 * 7, // 7 ngày
+});
+
+// Set refresh token cookie (30 ngày)
+response.cookies.set("refreshToken", refreshToken, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV !== "development",
+  path: "/",
+  maxAge: 60 * 60 * 24 * 30, // 30 ngày
 });
 
 return response;
