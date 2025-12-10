@@ -2,7 +2,6 @@
 import { NextResponse } from "next/server";
 import { getUserFromToken } from "../../../../lib/auth";
 import db from "../../../../lib/db";
-import { sendBookingConfirmationEmail } from "../../../../utils/mailer";
 
 export async function POST(req, { params }) {
   try {
@@ -84,50 +83,6 @@ export async function POST(req, { params }) {
       } else {
         throw error;
       }
-    }
-
-    // Gửi email xác nhận sau khi cập nhật status thành công
-    try {
-      const [bookingInfo] = await db.query(`
-        SELECT 
-          b.id AS booking_id,
-          b.check_in,
-          b.check_out,
-          b.total_price,
-          u.name AS user_name,
-          u.email AS user_email,
-          h.name AS hotel_name,
-          r.name AS room_name
-        FROM bookings b
-        LEFT JOIN users u ON b.user_id = u.id
-        LEFT JOIN hotels h ON b.hotel_id = h.id
-        LEFT JOIN booking_details bd ON b.id = bd.booking_id
-        LEFT JOIN rooms r ON bd.room_id = r.id
-        WHERE b.id = ?
-      `, [id]);
-
-      if (bookingInfo.length > 0 && bookingInfo[0].user_email) {
-        const booking = bookingInfo[0];
-        const checkInDate = new Date(booking.check_in);
-        const checkOutDate = new Date(booking.check_out);
-        const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-        
-        // Gửi email xác nhận
-        sendBookingConfirmationEmail(booking.user_email, {
-          booking_id: booking.booking_id,
-          user_name: booking.user_name,
-          hotel_name: booking.hotel_name,
-          room_name: booking.room_name,
-          check_in: booking.check_in,
-          check_out: booking.check_out,
-          total_price: booking.total_price,
-          nights: nights
-        }).catch(err => {
-          console.error('Lỗi gửi email xác nhận đặt phòng:', err);
-        });
-      }
-    } catch (emailError) {
-      console.error('Lỗi khi lấy thông tin để gửi email:', emailError);
     }
 
     // Log payment (có thể lưu vào bảng payments nếu có)

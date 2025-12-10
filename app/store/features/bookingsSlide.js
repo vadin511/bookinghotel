@@ -53,15 +53,15 @@ export const createBooking = createAsyncThunk(
 // Thunk: update booking status
 export const updateBookingStatus = createAsyncThunk(
   "bookings/updateBookingStatus",
-  async ({ bookingId, status, cancellation_reason }, { rejectWithValue }) => {
+  async ({ bookingId, status, cancellation_reason, cancellation_type }, { rejectWithValue }) => {
     try {
-      console.log("Cancelling booking:", { bookingId, status, cancellation_reason });
+      console.log("Updating booking:", { bookingId, status, cancellation_reason, cancellation_type });
       
       const res = await fetch(`/api/bookings/${bookingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ status, cancellation_reason }),
+        body: JSON.stringify({ status, cancellation_reason, cancellation_type }),
       });
       
       let responseData;
@@ -167,10 +167,13 @@ const bookingsSlice = createSlice({
         const bookingIndex = state.list.findIndex((b) => b.id === bookingId || b.id === parseInt(bookingId));
         
         if (bookingIndex !== -1) {
-          // Cập nhật status và cancellation_reason ngay lập tức
+          // Cập nhật status, cancellation_reason và cancellation_type ngay lập tức
           state.list[bookingIndex].status = action.payload.new_status || action.payload.status;
           if (action.payload.cancellation_reason !== undefined) {
             state.list[bookingIndex].cancellation_reason = action.payload.cancellation_reason;
+          }
+          if (action.payload.cancellation_type !== undefined) {
+            state.list[bookingIndex].cancellation_type = action.payload.cancellation_type;
           }
         }
       })

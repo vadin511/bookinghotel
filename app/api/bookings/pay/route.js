@@ -2,7 +2,6 @@
 import { NextResponse } from "next/server";
 import { getUserFromToken } from "../../../lib/auth";
 import db from "../../../lib/db";
-import { sendBookingConfirmationEmail } from "../../../utils/mailer";
 
 // Tạo booking mới và thanh toán trong một lần
 export async function POST(req) {
@@ -83,10 +82,24 @@ export async function POST(req) {
     }
 
     // Bắt đầu transaction: Tạo booking và thanh toán
-    // Tạo booking với status = "pending" (sau khi thanh toán thành công)
+    // Với MoMo: tạo booking với status = "pending", sẽ được cập nhật thành "paid" sau khi thanh toán thành công
+    // Với các phương thức khác: tạo booking với status tương ứng
+    let bookingStatus = "pending";
+    
+    // Nếu là COD hoặc bank_transfer, giữ status là "pending" để admin xác nhận
+    // Nếu là MoMo, cũng giữ "pending" và sẽ được cập nhật qua callback/IPN
+    if (payment_method === "cod" || payment_method === "bank_transfer") {
+      bookingStatus = "pending";
+    } else if (payment_method === "momo") {
+      bookingStatus = "pending"; // Sẽ được cập nhật thành "paid" sau khi thanh toán thành công
+    } else {
+      // Các phương thức thanh toán khác (vnpay, credit_card) có thể xử lý tương tự
+      bookingStatus = "pending";
+    }
+
     const bookingSql = `
       INSERT INTO bookings (user_id, hotel_id, check_in, check_out, status, total_price, payment_method, created_at)
-      VALUES (?, ?, ?, ?, 'pending', ?, ?, NOW())
+      VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
     `;
 
     const [bookingResult] = await db.query(bookingSql, [
@@ -94,6 +107,7 @@ export async function POST(req) {
       hotel_id,
       check_in,
       check_out,
+      bookingStatus,
       total_price,
       payment_method || "credit_card",
     ]);
@@ -115,49 +129,6 @@ export async function POST(req) {
       price_per_night,
       subtotal,
     ]);
-
-    // Lấy thông tin đầy đủ để gửi email
-    try {
-      const [bookingInfo] = await db.query(`
-        SELECT 
-          b.id AS booking_id,
-          b.check_in,
-          b.check_out,
-          b.total_price,
-          u.name AS user_name,
-          u.email AS user_email,
-          h.name AS hotel_name,
-          r.name AS room_name
-        FROM bookings b
-        LEFT JOIN users u ON b.user_id = u.id
-        LEFT JOIN hotels h ON b.hotel_id = h.id
-        LEFT JOIN booking_details bd ON b.id = bd.booking_id
-        LEFT JOIN rooms r ON bd.room_id = r.id
-        WHERE b.id = ?
-      `, [bookingId]);
-
-      if (bookingInfo.length > 0 && bookingInfo[0].user_email) {
-        const booking = bookingInfo[0];
-        
-        // Gửi email xác nhận (không chặn response nếu email lỗi)
-        sendBookingConfirmationEmail(booking.user_email, {
-          booking_id: booking.booking_id,
-          user_name: booking.user_name,
-          hotel_name: booking.hotel_name,
-          room_name: booking.room_name,
-          check_in: booking.check_in,
-          check_out: booking.check_out,
-          total_price: booking.total_price,
-          nights: nights
-        }).catch(err => {
-          console.error('Lỗi gửi email xác nhận đặt phòng:', err);
-          // Không throw error để không ảnh hưởng đến response thành công
-        });
-      }
-    } catch (emailError) {
-      console.error('Lỗi khi lấy thông tin để gửi email:', emailError);
-      // Không throw error để không ảnh hưởng đến response thành công
-    }
 
     // Log payment (có thể lưu vào bảng payments nếu có)
     // TODO: Tạo bảng payments để lưu chi tiết thanh toán

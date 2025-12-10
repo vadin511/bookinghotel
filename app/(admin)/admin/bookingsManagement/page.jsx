@@ -28,6 +28,12 @@ const BookingsPage = () => {
     isOpen: false,
     booking: null,
   });
+  const [adminCancelDialog, setAdminCancelDialog] = useState({
+    isOpen: false,
+    booking: null,
+    reason: "",
+    error: "",
+  });
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -60,6 +66,7 @@ const BookingsPage = () => {
                 bookingId: booking.id,
                 status: "cancelled",
                 cancellation_reason: "Phòng đã bị hủy do chưa được xác nhận",
+                cancellation_type: "system",
               })
             ).unwrap();
             hasUpdates = true;
@@ -287,7 +294,7 @@ const BookingsPage = () => {
   };
 
   // Format status badge
-  const getStatusBadge = (status, checkOut) => {
+  const getStatusBadge = (status, checkOut, cancellationType) => {
     // Kiểm tra nếu đã qua check-out
     if (checkOut) {
       const isAfter = isAfterCheckOut(checkOut);
@@ -323,7 +330,13 @@ const BookingsPage = () => {
         color: "bg-green-100 text-green-800 border-green-300",
       },
       cancelled: {
-        text: "Đã hủy",
+        text: cancellationType === "admin" 
+          ? "Đã hủy (Admin)" 
+          : cancellationType === "user"
+          ? "Đã hủy (Người dùng)"
+          : cancellationType === "system"
+          ? "Đã hủy (Hệ thống)"
+          : "Đã hủy",
         color: "bg-red-100 text-red-800 border-red-300",
       },
       completed: {
@@ -351,28 +364,58 @@ const BookingsPage = () => {
       return;
     }
 
-    setConfirmDialog({
+    // Admin phải nhập lý do hủy
+    setAdminCancelDialog({
       isOpen: true,
-      title: "Hủy đặt phòng",
-      message: `Bạn có chắc chắn muốn hủy booking #${booking.id}? Chỉ có thể hủy trước thời gian check-in.`,
-      confirmText: "Hủy",
-      type: "warning",
-      onConfirm: async () => {
-        setUpdatingId(booking.id);
-        try {
-          await dispatch(
-            updateBookingStatus({ bookingId: booking.id, status: "cancelled" })
-          ).unwrap();
-          // Refresh danh sách booking để cập nhật UI ngay lập tức
-          await dispatch(fetchBookings());
-          toast.success("Hủy đặt phòng thành công!");
-        } catch (err) {
-          toast.error(err || "Có lỗi xảy ra khi hủy đặt phòng");
-        } finally {
-          setUpdatingId(null);
-        }
-      },
+      booking: booking,
+      reason: "",
+      error: "",
     });
+  };
+
+  const handleAdminCancelConfirm = async () => {
+    const { booking, reason } = adminCancelDialog;
+    
+    if (!reason.trim()) {
+      setAdminCancelDialog({
+        ...adminCancelDialog,
+        error: "Vui lòng nhập lý do hủy đặt phòng",
+      });
+      return;
+    }
+    
+    if (reason.trim().length < 10) {
+      setAdminCancelDialog({
+        ...adminCancelDialog,
+        error: "Lý do hủy phải có ít nhất 10 ký tự",
+      });
+      return;
+    }
+
+    setUpdatingId(booking.id);
+    try {
+      await dispatch(
+        updateBookingStatus({ 
+          bookingId: booking.id, 
+          status: "cancelled",
+          cancellation_reason: reason.trim(),
+          cancellation_type: "admin"
+        })
+      ).unwrap();
+      // Refresh danh sách booking để cập nhật UI ngay lập tức
+      await dispatch(fetchBookings());
+      toast.success("Hủy đặt phòng thành công!");
+      setAdminCancelDialog({
+        isOpen: false,
+        booking: null,
+        reason: "",
+        error: "",
+      });
+    } catch (err) {
+      toast.error(err || "Có lỗi xảy ra khi hủy đặt phòng");
+    } finally {
+      setUpdatingId(null);
+    }
   };
 
   const handleCompleteBooking = (booking) => {
@@ -430,29 +473,31 @@ const BookingsPage = () => {
   };
 
   const handleUpdateStatus = async (bookingId, newStatus, closeModal = false) => {
+    // Nếu admin hủy booking, phải hiển thị dialog nhập lý do
+    if (newStatus === "cancelled") {
+      const booking = bookings.find(b => b.id === bookingId);
+      if (booking) {
+        handleCancelBooking(booking);
+      }
+      return;
+    }
+
     const statusText = 
       newStatus === "confirmed"
         ? "xác nhận"
-        : newStatus === "cancelled"
-        ? "hủy"
         : "hoàn thành";
     
     const statusTitle = 
       newStatus === "confirmed"
         ? "Xác nhận đặt phòng"
-        : newStatus === "cancelled"
-        ? "Hủy đặt phòng"
         : "Hoàn thành đặt phòng";
-
-    const dialogType = 
-      newStatus === "cancelled" ? "warning" : "info";
 
     setConfirmDialog({
       isOpen: true,
       title: statusTitle,
       message: `Bạn có chắc chắn muốn ${statusText} booking #${bookingId}?`,
       confirmText: statusText.charAt(0).toUpperCase() + statusText.slice(1),
-      type: dialogType,
+      type: "info",
       onConfirm: async () => {
         setUpdatingId(bookingId);
         try {
@@ -657,7 +702,7 @@ const BookingsPage = () => {
                       {Number(booking.total_price).toLocaleString("vi-VN")} VNĐ
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(booking.status, booking.check_out)}
+                      {getStatusBadge(booking.status, booking.check_out, booking.cancellation_type)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       {(() => {
@@ -725,6 +770,13 @@ const BookingsPage = () => {
                             }),
                             title: booking.cancellation_reason ? "Xem lý do hủy" : "Xem thông tin booking",
                           });
+                        } else if (booking.status === "pending" && isAfterCheckOut(booking.check_out)) {
+                          // Booking đã quá hạn nhưng chưa được cập nhật
+                          actions.push({
+                            label: "Xem chi tiết",
+                            icon: "fas fa-eye",
+                            onClick: () => openDetailModal(booking),
+                          });
                         }
                         
                         return <ActionDropdown actions={actions} />;
@@ -749,6 +801,146 @@ const BookingsPage = () => {
         type={confirmDialog.type}
       />
 
+      {/* Admin Cancel Dialog */}
+      {adminCancelDialog.isOpen && adminCancelDialog.booking && (
+        <div
+          className="fixed inset-0 backdrop-blur-sm bg-opacity-50 z-50 flex items-center justify-center animate-fadeIn"
+          onClick={() =>
+            setAdminCancelDialog({ isOpen: false, booking: null, reason: "", error: "" })
+          }
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100 animate-fadeIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center bg-red-100">
+                    <i className="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-800">
+                      Hủy đặt phòng
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Booking #{adminCancelDialog.booking.id}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() =>
+                    setAdminCancelDialog({ isOpen: false, booking: null, reason: "", error: "" })
+                  }
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <i className="fas fa-times text-xl"></i>
+                </button>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5">
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600 mb-1">
+                  <span className="font-semibold">Khách hàng:</span>{" "}
+                  {adminCancelDialog.booking.user_name ||
+                    `User #${adminCancelDialog.booking.user_id}`}
+                </p>
+                <p className="text-sm text-gray-600 mb-1">
+                  <span className="font-semibold">Phòng:</span>{" "}
+                  {adminCancelDialog.booking.rooms &&
+                  adminCancelDialog.booking.rooms.length > 0
+                    ? adminCancelDialog.booking.rooms
+                        .map((r) => r.room_name)
+                        .join(", ")
+                    : "N/A"}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-semibold">Ngày:</span>{" "}
+                  {formatDate(adminCancelDialog.booking.check_in)} -{" "}
+                  {formatDate(adminCancelDialog.booking.check_out)}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Lý do hủy <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={adminCancelDialog.reason}
+                  onChange={(e) =>
+                    setAdminCancelDialog({
+                      ...adminCancelDialog,
+                      reason: e.target.value,
+                      error: "",
+                    })
+                  }
+                  placeholder="Ví dụ: Khách hàng không thanh toán, phòng không còn trống, khách hàng yêu cầu hủy..."
+                  className={`w-full p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 ${
+                    adminCancelDialog.error
+                      ? "border-red-300 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-red-500"
+                  }`}
+                  rows="4"
+                  maxLength={500}
+                />
+                <div className="flex justify-between items-center mt-1">
+                  {adminCancelDialog.error && (
+                    <p className="text-sm text-red-600">{adminCancelDialog.error}</p>
+                  )}
+                  <p className="text-xs text-gray-500 ml-auto">
+                    {adminCancelDialog.reason.length}/500 ký tự
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-xs text-amber-800">
+                  <i className="fas fa-info-circle mr-1"></i>
+                  Lưu ý: Sau khi hủy, bạn sẽ không thể hoàn tác hành động này.
+                </p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+              <button
+                onClick={() =>
+                  setAdminCancelDialog({ isOpen: false, booking: null, reason: "", error: "" })
+                }
+                className="px-5 py-2.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium transition-all duration-200 flex items-center space-x-2 shadow-sm hover:shadow-md"
+              >
+                <i className="fas fa-times"></i>
+                <span>Đóng</span>
+              </button>
+              <button
+                onClick={handleAdminCancelConfirm}
+                disabled={
+                  !adminCancelDialog.reason.trim() ||
+                  adminCancelDialog.reason.trim().length < 10 ||
+                  updatingId === adminCancelDialog.booking.id
+                }
+                className="px-5 py-2.5 rounded-lg text-white font-medium transition-all duration-200 flex items-center space-x-2 shadow-md hover:shadow-lg bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed"
+              >
+                {updatingId === adminCancelDialog.booking.id ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i>
+                    <span>Đang xử lý...</span>
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-trash-alt"></i>
+                    <span>Xác nhận hủy</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Cancellation Reason Dialog */}
       {cancellationReasonDialog.isOpen && cancellationReasonDialog.booking && (
         <div
@@ -770,7 +962,7 @@ const BookingsPage = () => {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-gray-800">
-                      Lý do hủy đặt phòng
+                      Thông tin hủy đặt phòng
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
                       Booking #{cancellationReasonDialog.booking.id}
@@ -811,6 +1003,25 @@ const BookingsPage = () => {
                   {formatDate(cancellationReasonDialog.booking.check_out)}
                 </p>
               </div>
+
+              {cancellationReasonDialog.booking.cancellation_type && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Người hủyhủy:
+                  </label>
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-base font-medium text-gray-800">
+                      {cancellationReasonDialog.booking.cancellation_type === "admin"
+                        ? "Admin hủy"
+                        : cancellationReasonDialog.booking.cancellation_type === "user"
+                        ? "Người dùng hủy"
+                        : cancellationReasonDialog.booking.cancellation_type === "system"
+                        ? "Hệ thống tự động hủy (quá hạn)"
+                        : "Không xác định"}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -877,7 +1088,7 @@ const BookingsPage = () => {
                 </button>
               </div>
               <div className="mt-4">
-                {getStatusBadge(selectedBooking.status, selectedBooking.check_out)}
+                {getStatusBadge(selectedBooking.status, selectedBooking.check_out, selectedBooking.cancellation_type)}
               </div>
             </div>
 
@@ -968,29 +1179,49 @@ const BookingsPage = () => {
               </div>
 
               {/* Cancellation Reason */}
-              {selectedBooking.status === "cancelled" && selectedBooking.cancellation_reason && (
+              {selectedBooking.status === "cancelled" && (
                 <div className="mb-6 border-t border-gray-200 pt-4">
                   <h3 className="text-lg font-semibold text-gray-800 mb-3">
                     <i className="fas fa-exclamation-triangle mr-2 text-red-700"></i>
-                    Lý do hủy
+                    Thông tin hủy đặt phòng
                   </h3>
-                  <div className="bg-red-50 rounded-lg p-4 border border-red-200">
-                    <p className="text-gray-800 whitespace-pre-wrap">
-                      {selectedBooking.cancellation_reason}
-                    </p>
+                  <div className="space-y-3">
+                    {selectedBooking.cancellation_type && (
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-sm text-gray-600 mb-1">Loại hủy:</p>
+                        <p className="font-medium text-gray-900">
+                          {selectedBooking.cancellation_type === "admin" 
+                            ? "Admin hủy" 
+                            : selectedBooking.cancellation_type === "user"
+                            ? "Người dùng hủy"
+                            : selectedBooking.cancellation_type === "system"
+                            ? "Hệ thống tự động hủy (quá hạn)"
+                            : "Không xác định"}
+                        </p>
+                      </div>
+                    )}
+                    {selectedBooking.cancellation_reason && (
+                      <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                        <p className="text-sm text-gray-600 mb-2 font-semibold">Lý do hủy:</p>
+                        <p className="text-gray-800 whitespace-pre-wrap">
+                          {selectedBooking.cancellation_reason}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
             </div>
 
             {/* Footer with action buttons for pending bookings */}
-            {selectedBooking.status === "pending" && (
+            {selectedBooking.status === "pending" && !isAfterCheckOut(selectedBooking.check_out) && (
               <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 rounded-b-2xl">
                 <div className="flex items-center justify-end space-x-3">
                   <button
-                    onClick={() => handleUpdateStatus(selectedBooking.id, "cancelled", false)}
-                    disabled={updatingId === selectedBooking.id}
+                    onClick={() => handleCancelBooking(selectedBooking)}
+                    disabled={updatingId === selectedBooking.id || isAfterCheckIn(selectedBooking.check_in)}
                     className="px-5 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition-all duration-200 flex items-center space-x-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={isAfterCheckIn(selectedBooking.check_in) ? "Không thể hủy sau thời gian check-in" : "Hủy đặt phòng"}
                   >
                     {updatingId === selectedBooking.id ? (
                       <>

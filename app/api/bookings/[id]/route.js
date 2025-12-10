@@ -49,7 +49,7 @@ export async function PUT(req, { params }) {
     let requestBody;
     try {
       requestBody = await req.json();
-      console.log("Request body:", { status: requestBody?.status, hasReason: !!requestBody?.cancellation_reason });
+      console.log("Request body:", { status: requestBody?.status, hasReason: !!requestBody?.cancellation_reason, cancellation_type: requestBody?.cancellation_type });
     } catch (jsonError) {
       console.error("Error parsing request body:", jsonError);
       return NextResponse.json(
@@ -58,7 +58,7 @@ export async function PUT(req, { params }) {
       );
     }
     
-    const { status, cancellation_reason } = requestBody || {};
+    const { status, cancellation_reason, cancellation_type } = requestBody || {};
     
     if (!status) {
       console.error("Missing status in request body");
@@ -68,7 +68,26 @@ export async function PUT(req, { params }) {
       );
     }
     
-    console.log("Processing cancellation:", { bookingId: id, status, cancellation_reason: cancellation_reason?.substring(0, 50) });
+    // Xác định cancellation_type nếu không được cung cấp
+    // 3 trạng thái: user, admin, system
+    let finalCancellationType = cancellation_type;
+    if (status === "cancelled" && !finalCancellationType) {
+      // Tự động xác định dựa vào role của user
+      if (user.role === "admin") {
+        finalCancellationType = "admin";
+      } else {
+        finalCancellationType = "user";
+      }
+    }
+    // Nếu cancellation_type được truyền vào là "system", giữ nguyên
+    // (thường được set khi hệ thống tự động hủy do quá hạn)
+    
+    console.log("Processing cancellation:", { 
+      bookingId: id, 
+      status, 
+      cancellation_reason: cancellation_reason?.substring(0, 50),
+      cancellation_type: finalCancellationType
+    });
 
     // Kiểm tra status hợp lệ - cần khớp với ENUM trong database
     // Các giá trị có thể: pending, confirmed, paid, cancelled, completed
@@ -181,16 +200,29 @@ export async function PUT(req, { params }) {
     const statusToUpdate = cleanStatus;
     
     try {
-      // Thử cập nhật với cancellation_reason
+      // Thử cập nhật với cancellation_reason và cancellation_type
       sql = `
         UPDATE bookings 
-        SET status = ?, cancellation_reason = ?
+        SET status = ?, cancellation_reason = ?, cancellation_type = ?
         WHERE id = ?
       `;
-      queryParams = [statusToUpdate, cancellation_reason || null, id];
-      console.log("Executing SQL:", { sql, queryParams: [statusToUpdate, cancellation_reason ? '***' : null, id] });
+      queryParams = [
+        statusToUpdate, 
+        cancellation_reason || null, 
+        statusToUpdate === "cancelled" ? finalCancellationType : null,
+        id
+      ];
+      console.log("Executing SQL:", { 
+        sql, 
+        queryParams: [
+          statusToUpdate, 
+          cancellation_reason ? '***' : null, 
+          finalCancellationType,
+          id
+        ] 
+      });
       await db.query(sql, queryParams);
-      console.log("Update successful with cancellation_reason");
+      console.log("Update successful with cancellation_reason and cancellation_type");
     } catch (error) {
       console.error("Database error details:", {
         code: error.code,
@@ -200,18 +232,36 @@ export async function PUT(req, { params }) {
         sql: error.sql
       });
       
-      // Nếu không có cột cancellation_reason, chỉ cập nhật status
+      // Nếu không có cột cancellation_reason hoặc cancellation_type, thử các cách khác
       if (error.code === 'ER_BAD_FIELD_ERROR' || error.code === 1054 || error.errno === 1054) {
-        console.warn("Cột cancellation_reason không tồn tại, chỉ cập nhật status");
-        sql = `
-          UPDATE bookings 
-          SET status = ?
-          WHERE id = ?
-        `;
-        queryParams = [statusToUpdate, id];
-        console.log("Retrying SQL without cancellation_reason:", { sql, queryParams });
-        await db.query(sql, queryParams);
-        console.log("Update successful without cancellation_reason");
+        // Thử chỉ với cancellation_reason (không có cancellation_type)
+        try {
+          console.warn("Cột cancellation_type có thể không tồn tại, thử chỉ với cancellation_reason");
+          sql = `
+            UPDATE bookings 
+            SET status = ?, cancellation_reason = ?
+            WHERE id = ?
+          `;
+          queryParams = [statusToUpdate, cancellation_reason || null, id];
+          await db.query(sql, queryParams);
+          console.log("Update successful with cancellation_reason only");
+        } catch (error2) {
+          // Nếu vẫn lỗi, chỉ cập nhật status
+          if (error2.code === 'ER_BAD_FIELD_ERROR' || error2.code === 1054 || error2.errno === 1054) {
+            console.warn("Cột cancellation_reason không tồn tại, chỉ cập nhật status");
+            sql = `
+              UPDATE bookings 
+              SET status = ?
+              WHERE id = ?
+            `;
+            queryParams = [statusToUpdate, id];
+            console.log("Retrying SQL without cancellation fields:", { sql, queryParams });
+            await db.query(sql, queryParams);
+            console.log("Update successful without cancellation fields");
+          } else {
+            throw error2;
+          }
+        }
       } else if (error.code === 'ER_DATA_TOO_LONG' || error.errno === 1406 || error.message?.includes('Data truncated')) {
         // Lỗi do status không khớp với ENUM
         console.error("Status value doesn't match ENUM:", { 
@@ -345,7 +395,55 @@ export async function PUT(req, { params }) {
           const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
           const finalCancellationReason = cancellation_reason || booking.cancellation_reason || 'Không có lý do';
           
-          if (isAdminCancelling) {
+          // Lấy cancellation_type từ database
+          const [bookingWithType] = await db.query(
+            "SELECT cancellation_type FROM bookings WHERE id = ?",
+            [id]
+          );
+          const bookingCancellationType = bookingWithType.length > 0 
+            ? bookingWithType[0].cancellation_type 
+            : finalCancellationType || (isAdminCancelling ? 'admin' : 'user');
+          
+          // Xử lý 3 trạng thái: user, admin, system
+          if (bookingCancellationType === 'system') {
+            // Hệ thống tự hủy → gửi email cho cả admin và user
+            // Gửi email cho admin
+            if (adminEmail) {
+              await sendBookingCancellationEmailToAdmin(adminEmail, {
+                booking_id: booking.booking_id,
+                user_name: booking.user_name,
+                user_email: booking.user_email,
+                hotel_name: booking.hotel_name,
+                room_name: booking.room_name,
+                check_in: booking.check_in,
+                check_out: booking.check_out,
+                total_price: booking.total_price,
+                nights: nights,
+                cancellation_reason: finalCancellationReason,
+                cancellation_type: 'system'
+              }).catch(err => {
+                console.error('Lỗi gửi email thông báo hủy đặt phòng cho admin:', err);
+              });
+            }
+            
+            // Gửi email cho user
+            if (booking.user_email) {
+              await sendBookingCancellationEmailToUser(booking.user_email, {
+                booking_id: booking.booking_id,
+                user_name: booking.user_name,
+                hotel_name: booking.hotel_name,
+                room_name: booking.room_name,
+                check_in: booking.check_in,
+                check_out: booking.check_out,
+                total_price: booking.total_price,
+                nights: nights,
+                cancellation_reason: finalCancellationReason,
+                cancelled_by: 'system'
+              }).catch(err => {
+                console.error('Lỗi gửi email thông báo hủy đặt phòng cho user:', err);
+              });
+            }
+          } else if (isAdminCancelling || bookingCancellationType === 'admin') {
             // Admin hủy → chỉ gửi email cho user
             if (booking.user_email) {
               await sendBookingCancellationEmailToUser(booking.user_email, {
@@ -363,7 +461,7 @@ export async function PUT(req, { params }) {
                 console.error('Lỗi gửi email thông báo hủy đặt phòng cho user:', err);
               });
             }
-          } else {
+          } else if (bookingCancellationType === 'user') {
             // User hủy → gửi email cho cả admin và user
             // Gửi email cho admin
             if (adminEmail) {
@@ -378,7 +476,7 @@ export async function PUT(req, { params }) {
                 total_price: booking.total_price,
                 nights: nights,
                 cancellation_reason: finalCancellationReason,
-                cancellation_type: 'manual'
+                cancellation_type: 'user'
               }).catch(err => {
                 console.error('Lỗi gửi email thông báo hủy đặt phòng cho admin:', err);
               });
@@ -419,6 +517,7 @@ export async function PUT(req, { params }) {
       booking_id: id,
       new_status: statusToUpdate,
       cancellation_reason: cancellation_reason || null,
+      cancellation_type: statusToUpdate === "cancelled" ? finalCancellationType : null,
     });
   } catch (error) {
     console.error("PUT /api/bookings/[id] error:", error);

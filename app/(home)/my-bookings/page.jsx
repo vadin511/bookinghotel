@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchBookings, updateBookingStatus } from "../../../app/store/features/bookingsSlide";
-import { selectUser } from "../../../app/store/features/userSlice";
+import { selectUser, selectUserStatus } from "../../../app/store/features/userSlice";
 import Loading from "@/components/common/Loading";
 import CancelBookingDialog from "@/components/common/CancelBookingDialog";
 import RatingDialog from "@/components/common/RatingDialog";
@@ -14,6 +14,7 @@ const MyBookingsPage = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const user = useSelector(selectUser);
+  const userStatus = useSelector(selectUserStatus);
   const { list: bookings, loading, error } = useSelector(
     (state) => state.bookings
   );
@@ -70,12 +71,20 @@ const MyBookingsPage = () => {
   };
 
   useEffect(() => {
-    if (!user) {
+    // Chờ cho đến khi fetch user profile hoàn tất
+    if (userStatus === 'loading' || userStatus === 'idle') {
+      return;
+    }
+
+    // Nếu fetch thất bại hoặc không có user, redirect về login
+    if (userStatus === 'failed' || !user) {
       router.push("/login");
       return;
     }
+
+    // Nếu có user, fetch bookings
     dispatch(fetchBookings());
-  }, [dispatch, user, router]);
+  }, [dispatch, user, userStatus, router]);
 
   useEffect(() => {
     if (bookings.length > 0 && user) {
@@ -676,11 +685,25 @@ const MyBookingsPage = () => {
                           )}
                         </div>
                       </div>
-                      {booking.cancellation_reason && (
-                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                          <p className="text-sm text-red-800">
-                            <span className="font-semibold">Lý do hủy:</span> {booking.cancellation_reason}
-                          </p>
+                      {booking.status === "cancelled" && (
+                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg space-y-2">
+                          {booking.cancellation_type && (
+                            <p className="text-sm text-red-800">
+                              <span className="font-semibold">Người hủyhủy:</span>{" "}
+                              {booking.cancellation_type === "admin"
+                                ? "Admin hủy"
+                                : booking.cancellation_type === "user"
+                                ? "Bạn đã hủy"
+                                : booking.cancellation_type === "system"
+                                ? "Hệ thống tự động hủy (quá hạn)"
+                                : "Không xác định"}
+                            </p>
+                          )}
+                          {booking.cancellation_reason && (
+                            <p className="text-sm text-red-800">
+                              <span className="font-semibold">Lý do hủy:</span> {booking.cancellation_reason}
+                            </p>
+                          )}
                         </div>
                       )}
                   </div>

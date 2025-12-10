@@ -445,6 +445,14 @@ const HotelCard = ({
                   </span>
                 </div>
               )}
+              {checkIn && checkOut && hotel.available_rooms_in_period !== undefined && (
+                <div className="text-xs text-green-600 mb-1 flex items-center gap-1">
+                  <i className="fas fa-bed text-xs"></i>
+                  <span className="font-medium">
+                    Còn {hotel.available_rooms_in_period} phòng trống trong khoảng thời gian này
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

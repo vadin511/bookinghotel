@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUserProfile, selectUser } from "../../../app/store/features/userSlice";
+import { fetchUserProfile, selectUser, selectUserStatus } from "../../../app/store/features/userSlice";
 import Header from "../../../components/admin/header/Header";
 import Sidebar from "../../../components/admin/sidebar/Sidebar";
 
@@ -11,26 +11,32 @@ const AdminLayout = ({ children }) => {
   const dispatch = useDispatch();
   const router = useRouter();
   const user = useSelector(selectUser);
+  const status = useSelector(selectUserStatus);
 
   useEffect(() => {
     // Chỉ fetch user profile một lần khi mount
-    if (!user) {
+    if (!user && status === 'idle') {
       dispatch(fetchUserProfile());
     }
-  }, [dispatch]); // Chỉ chạy khi dispatch thay đổi
+  }, [dispatch, user, status]);
 
   useEffect(() => {
-    // Kiểm tra user sau khi đã fetch
-    if (user === null) {
-      // User đã được fetch nhưng null, có thể token hết hạn
-      // Không làm gì ở đây, để fetchUserProfile tự xử lý refresh
+    // Chờ cho đến khi fetch hoàn tất (không phải đang loading hoặc idle)
+    if (status === 'loading' || status === 'idle') {
+      return;
+    }
+
+    // Nếu fetch thất bại hoặc user null sau khi fetch thành công, redirect về login
+    if (status === 'failed' || (status === 'succeeded' && !user)) {
+      router.push("/login");
       return;
     }
     
+    // Kiểm tra role admin
     if (user && user.role !== "admin") {
       router.push("/login");
     }
-  }, [user, router]);
+  }, [user, status, router]);
 
 
  

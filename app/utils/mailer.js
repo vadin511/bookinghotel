@@ -132,9 +132,21 @@ export async function sendBookingCancellationEmailToAdmin(adminEmail, bookingDat
   const checkInFormatted = formatDate(check_in);
   const checkOutFormatted = formatDate(check_out);
   const priceFormatted = new Intl.NumberFormat('vi-VN').format(total_price);
-  const cancellationTypeText = cancellation_type === 'auto' 
-    ? 'Tự động hủy do quá thời gian' 
-    : 'Hủy thủ công';
+  
+  // Xác định người hủy dựa vào cancellation_type
+  let cancellationTypeText = 'Hủy thủ công';
+  let cancelledByText = 'Không xác định';
+  
+  if (cancellation_type === 'system') {
+    cancellationTypeText = 'Hệ thống tự động hủy (quá hạn)';
+    cancelledByText = 'Hệ thống';
+  } else if (cancellation_type === 'admin') {
+    cancellationTypeText = 'Quản trị viên hủy';
+    cancelledByText = 'Quản trị viên';
+  } else if (cancellation_type === 'user') {
+    cancellationTypeText = 'Khách hàng hủy';
+    cancelledByText = 'Khách hàng';
+  }
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -152,6 +164,7 @@ export async function sendBookingCancellationEmailToAdmin(adminEmail, bookingDat
         <p><strong>Ngày trả phòng:</strong> ${checkOutFormatted}</p>
         <p><strong>Số đêm:</strong> ${nights} đêm</p>
         <p><strong>Tổng tiền:</strong> ${priceFormatted} VNĐ</p>
+        <p><strong>Người hủy:</strong> ${cancelledByText}</p>
         <p><strong>Loại hủy:</strong> ${cancellationTypeText}</p>
         ${cancellation_reason ? `<p><strong>Lý do hủy:</strong> ${cancellation_reason}</p>` : ''}
       </div>
@@ -183,6 +196,7 @@ Thông tin đặt phòng đã hủy:
 - Ngày trả phòng: ${checkOutFormatted}
 - Số đêm: ${nights} đêm
 - Tổng tiền: ${priceFormatted} VNĐ
+- Người hủy: ${cancelledByText}
 - Loại hủy: ${cancellationTypeText}
 ${cancellation_reason ? `- Lý do hủy: ${cancellation_reason}` : ''}
 
@@ -222,9 +236,21 @@ export async function sendBookingCancellationEmailToUser(userEmail, bookingData)
   const checkInFormatted = formatDate(check_in);
   const checkOutFormatted = formatDate(check_out);
   const priceFormatted = new Intl.NumberFormat('vi-VN').format(total_price);
-  const cancelledByText = cancelled_by === 'admin' 
-    ? 'Quản trị viên đã hủy đặt phòng của bạn' 
-    : 'Bạn đã hủy đặt phòng';
+  
+  // Xác định người hủy dựa vào cancelled_by
+  let cancelledByText = 'Không xác định';
+  let cancellationTypeText = 'Hủy đặt phòng';
+  
+  if (cancelled_by === 'system') {
+    cancelledByText = 'Hệ thống đã tự động hủy đặt phòng của bạn (do quá hạn)';
+    cancellationTypeText = 'Hệ thống tự động hủy';
+  } else if (cancelled_by === 'admin') {
+    cancelledByText = 'Quản trị viên đã hủy đặt phòng của bạn';
+    cancellationTypeText = 'Quản trị viên hủy';
+  } else if (cancelled_by === 'user') {
+    cancelledByText = 'Bạn đã hủy đặt phòng';
+    cancellationTypeText = 'Khách hàng hủy';
+  }
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -242,10 +268,13 @@ export async function sendBookingCancellationEmailToUser(userEmail, bookingData)
         <p><strong>Số đêm:</strong> ${nights} đêm</p>
         <p><strong>Tổng tiền:</strong> ${priceFormatted} VNĐ</p>
         <p><strong>Người hủy:</strong> ${cancelledByText}</p>
+        <p><strong>Loại hủy:</strong> ${cancellationTypeText}</p>
         ${cancellation_reason ? `<p><strong>Lý do hủy:</strong> ${cancellation_reason}</p>` : ''}
       </div>
 
-      ${cancelled_by === 'admin' 
+      ${cancelled_by === 'system' 
+        ? '<p>Đặt phòng của bạn đã bị hủy tự động do quá thời hạn xác nhận. Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi để được hỗ trợ.</p>'
+        : cancelled_by === 'admin' 
         ? '<p>Nếu bạn có bất kỳ thắc mắc nào về việc hủy đặt phòng này, vui lòng liên hệ với chúng tôi để được hỗ trợ.</p>'
         : '<p>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi. Chúng tôi hy vọng được phục vụ bạn trong tương lai.</p>'
       }
@@ -275,9 +304,12 @@ Thông tin đặt phòng đã hủy:
 - Số đêm: ${nights} đêm
 - Tổng tiền: ${priceFormatted} VNĐ
 - Người hủy: ${cancelledByText}
+- Loại hủy: ${cancellationTypeText}
 ${cancellation_reason ? `- Lý do hủy: ${cancellation_reason}` : ''}
 
-${cancelled_by === 'admin' 
+${cancelled_by === 'system' 
+  ? 'Đặt phòng của bạn đã bị hủy tự động do quá thời hạn xác nhận. Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi để được hỗ trợ.'
+  : cancelled_by === 'admin' 
   ? 'Nếu bạn có bất kỳ thắc mắc nào về việc hủy đặt phòng này, vui lòng liên hệ với chúng tôi để được hỗ trợ.'
   : 'Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi. Chúng tôi hy vọng được phục vụ bạn trong tương lai.'
 }

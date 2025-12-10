@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { selectUser } from "../../../app/store/features/userSlice";
+import { selectUser, selectUserStatus } from "../../../app/store/features/userSlice";
 import BookingProgressBar from "../../../components/common/BookingProgressBar";
 import Loading from "@/components/common/Loading";
 
@@ -12,6 +12,7 @@ const PaymentPage = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const user = useSelector(selectUser);
+  const userStatus = useSelector(selectUserStatus);
 
   const room_id = searchParams.get("room_id");
   const room_name = searchParams.get("room_name");
@@ -81,11 +82,44 @@ const PaymentPage = () => {
 
   // Kiểm tra đăng nhập
   useEffect(() => {
-    if (!user) {
+    // Chờ cho đến khi fetch user profile hoàn tất
+    if (userStatus === 'loading' || userStatus === 'idle') {
+      return;
+    }
+
+    // Nếu fetch thất bại hoặc không có user, redirect về login
+    if (userStatus === 'failed' || !user) {
       toast.warning("Vui lòng đăng nhập để thanh toán.");
       router.push("/login");
     }
-  }, [user, router]);
+  }, [user, userStatus, router]);
+
+  // Xử lý callback từ MoMo và error messages
+  useEffect(() => {
+    const error = searchParams.get("error");
+    const errorMessage = searchParams.get("message");
+    const callbackBookingId = searchParams.get("booking_id");
+
+    if (error) {
+      if (error === "payment_failed") {
+        toast.error(errorMessage || "Thanh toán thất bại");
+      } else if (error === "invalid_signature") {
+        toast.error("Lỗi xác thực thanh toán. Vui lòng thử lại.");
+      } else if (error === "missing_params") {
+        toast.error("Thiếu thông tin thanh toán. Vui lòng thử lại.");
+      } else if (error === "server_error") {
+        toast.error(errorMessage || "Lỗi server. Vui lòng thử lại.");
+      }
+      
+      // Xóa error params khỏi URL
+      if (callbackBookingId) {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete("error");
+        newUrl.searchParams.delete("message");
+        router.replace(newUrl.pathname + newUrl.search);
+      }
+    }
+  }, [searchParams, router]);
 
   // Countdown timer khi thanh toán thành công
   useEffect(() => {
@@ -121,6 +155,82 @@ const PaymentPage = () => {
     setLoading(true);
 
     try {
+      // Xử lý thanh toán MoMo
+      if (paymentMethod === "momo") {
+        // Tạo booking trước
+        const bookingData = {
+          room_id: room_id,
+          check_in: check_in,
+          check_out: check_out,
+          total_price: total_price,
+          payment_method: "momo",
+          payment_data: null,
+        };
+
+        const bookingRes = await fetch("/api/bookings/pay", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(bookingData),
+        });
+
+        const bookingData_result = await bookingRes.json();
+
+        if (!bookingRes.ok) {
+          toast.error(bookingData_result.message || "Tạo đơn đặt phòng thất bại");
+          setLoading(false);
+          return;
+        }
+
+        const bookingId = bookingData_result.booking_id;
+
+        // Tạo payment request với MoMo
+        const orderId = `MOMO_${Date.now()}_${bookingId}`;
+        // Loại bỏ ký tự đặc biệt và giới hạn độ dài orderInfo
+        const orderInfo = `Thanh toan dat phong ${(room_name || "Phong").replace(/[^a-zA-Z0-9\s]/g, "")} - Booking ID: ${bookingId}`.substring(0, 250);
+
+        const momoRes = await fetch("/api/payments/momo/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            orderId: orderId,
+            amount: total_price,
+            orderInfo: orderInfo,
+            bookingId: bookingId,
+            extraData: JSON.stringify({ bookingId }), // Gửi JSON string, API sẽ tự encode base64
+          }),
+        });
+
+        const momoData = await momoRes.json();
+
+        if (!momoRes.ok) {
+          console.error("MoMo API error:", momoData);
+          toast.error(momoData.message || "Không thể tạo payment request với MoMo");
+          setLoading(false);
+          return;
+        }
+
+        if (!momoData.success) {
+          console.error("MoMo payment failed:", momoData);
+          toast.error(momoData.message || "Lỗi khi tạo payment request với MoMo");
+          setLoading(false);
+          return;
+        }
+
+        // Redirect đến trang thanh toán MoMo
+        if (momoData.payUrl) {
+          window.location.href = momoData.payUrl;
+        } else {
+          toast.error("Không nhận được URL thanh toán từ MoMo");
+          setLoading(false);
+        }
+        return;
+      }
+
+      // Xử lý các phương thức thanh toán khác (VNPay, bank_transfer, cod)
       const paymentData = {
         room_id: room_id,
         check_in: check_in,

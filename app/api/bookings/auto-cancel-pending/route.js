@@ -67,7 +67,8 @@ export async function POST(req) {
           `
           UPDATE bookings 
           SET status = 'cancelled', 
-              cancellation_reason = 'Phòng đã bị hủy do chưa được xác nhận'
+              cancellation_reason = 'Phòng đã bị hủy do chưa được xác nhận',
+              cancellation_type = 'system'
           WHERE id = ?
         `,
           [booking.id]
@@ -117,7 +118,7 @@ export async function POST(req) {
               total_price: booking.total_price || 0,
               nights: nights,
               cancellation_reason: cancellationReason,
-              cancellation_type: 'auto'
+              cancellation_type: 'system'
             }).catch(err => {
               console.error(`Lỗi gửi email thông báo hủy booking #${booking.id} cho admin:`, err);
             });
@@ -135,7 +136,7 @@ export async function POST(req) {
               total_price: booking.total_price || 0,
               nights: nights,
               cancellation_reason: cancellationReason,
-              cancelled_by: 'admin' // Tự động hủy được coi như admin hủy
+              cancelled_by: 'system' // Hệ thống tự động hủy
             }).catch(err => {
               console.error(`Lỗi gửi email thông báo hủy booking #${booking.id} cho user:`, err);
             });

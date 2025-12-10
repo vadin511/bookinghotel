@@ -155,6 +155,14 @@ export async function GET(req) {
 
     const [hotels] = await db.query(sql, params);
 
+    // Tính ngày hiện tại và ngày kết thúc (90 ngày sau)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const futureDate = new Date(today);
+    futureDate.setDate(futureDate.getDate() + 90);
+    const todayStr = today.toISOString().split('T')[0];
+    const futureDateStr = futureDate.toISOString().split('T')[0];
+
     // Lấy photos và xử lý dữ liệu
     const hotelsWithPhotos = await Promise.all(
       hotels.map(async (hotel) => {
@@ -180,6 +188,97 @@ export async function GET(req) {
           photos: room.photos ? room.photos.split(',') : []
         }));
 
+        // Đếm tổng số phòng available của khách sạn (chỉ query một lần)
+        const [totalRoomsResult] = await db.query(
+          "SELECT COUNT(*) as total FROM rooms WHERE hotel_id = ? AND status = 'available'",
+          [hotel.id]
+        );
+        const totalRooms = totalRoomsResult[0]?.total || 0;
+
+        // Tính số ngày trống trong 90 ngày tới
+        // Logic: Tính số ngày mà khách sạn có ít nhất 1 phòng trống
+        let availableDays = 0;
+        try {
+          if (totalRooms > 0) {
+            // Lấy tất cả các booking trong 90 ngày tới
+            const [bookings] = await db.query(`
+              SELECT b.check_in, b.check_out, COUNT(DISTINCT bd.room_id) as booked_rooms
+              FROM bookings b
+              JOIN booking_details bd ON b.id = bd.booking_id
+              JOIN rooms r ON bd.room_id = r.id
+              WHERE r.hotel_id = ?
+                AND b.status IN ('pending', 'confirmed', 'paid')
+                AND b.check_in < ?
+                AND b.check_out > ?
+              GROUP BY b.id, b.check_in, b.check_out
+            `, [hotel.id, futureDateStr, todayStr]);
+
+            // Tính số ngày trống dựa trên tỷ lệ booking
+            // Nếu không có booking nào, tất cả 90 ngày đều trống
+            if (bookings.length === 0) {
+              availableDays = 90;
+            } else {
+              // Tính tỷ lệ booking: nếu booking chiếm ít hơn 100% phòng, thì có ngày trống
+              // Ước tính: số ngày trống = 90 * (1 - tỷ lệ booking trung bình)
+              let totalBookedDays = 0;
+              bookings.forEach(booking => {
+                const checkInDate = new Date(booking.check_in);
+                const checkOutDate = new Date(booking.check_out);
+                const bookingDays = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+                // Chỉ tính các ngày trong khoảng 90 ngày tới
+                const startDate = new Date(Math.max(checkInDate.getTime(), new Date(todayStr).getTime()));
+                const endDate = new Date(Math.min(checkOutDate.getTime(), new Date(futureDateStr).getTime()));
+                if (endDate > startDate) {
+                  const daysInRange = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+                  // Tính tỷ lệ phòng đã đặt
+                  const bookingRatio = Math.min(1, booking.booked_rooms / totalRooms);
+                  totalBookedDays += daysInRange * bookingRatio;
+                }
+              });
+              
+              // Số ngày trống = 90 - số ngày đã đặt (tính theo tỷ lệ)
+              availableDays = Math.max(0, Math.min(90, Math.round(90 - totalBookedDays)));
+            }
+          } else {
+            availableDays = 0;
+          }
+        } catch (daysError) {
+          console.error(`Error calculating available days for hotel ${hotel.id}:`, daysError);
+          // Nếu có lỗi, đặt giá trị mặc định dựa trên available_rooms_count
+          availableDays = hotel.available_rooms_count > 0 ? 90 : 0;
+        }
+
+        // Tính số phòng trống trong khoảng thời gian tìm kiếm (check_in/check_out)
+        let availableRoomsInPeriod = 0;
+        if (check_in && check_out) {
+          try {
+            if (totalRooms > 0) {
+              // Đếm số phòng đã được đặt trong khoảng thời gian check_in đến check_out
+              // Logic overlap: Hai khoảng thời gian overlap nếu: (new_check_in < old_check_out) AND (new_check_out > old_check_in)
+              const [bookedRoomsResult] = await db.query(`
+                SELECT COUNT(DISTINCT bd.room_id) as booked_count
+                FROM booking_details bd
+                JOIN bookings b ON bd.booking_id = b.id
+                JOIN rooms r ON bd.room_id = r.id
+                WHERE r.hotel_id = ?
+                  AND b.status IN ('pending', 'confirmed', 'paid')
+                  AND ? < b.check_out
+                  AND ? > b.check_in
+              `, [hotel.id, check_in, check_out]);
+
+              const bookedRooms = bookedRoomsResult[0]?.booked_count || 0;
+              availableRoomsInPeriod = Math.max(0, totalRooms - bookedRooms);
+            }
+          } catch (roomsError) {
+            console.error(`Error calculating available rooms in period for hotel ${hotel.id}:`, roomsError);
+            // Nếu có lỗi, sử dụng available_rooms_count làm giá trị mặc định
+            availableRoomsInPeriod = hotel.available_rooms_count || 0;
+          }
+        } else {
+          // Nếu không có check_in/check_out, sử dụng tổng số phòng available
+          availableRoomsInPeriod = totalRooms;
+        }
+
         return {
           ...hotel,
           photos: hotelPhotos.map(p => p.photo_url),
@@ -188,6 +287,8 @@ export async function GET(req) {
           min_price_per_night: parseFloat(hotel.min_price_per_night) || 0,
           max_price_per_night: parseFloat(hotel.max_price_per_night) || 0,
           available_rooms_count: parseInt(hotel.available_rooms_count) || 0,
+          available_days: availableDays, // Số ngày trống trong 90 ngày tới
+          available_rooms_in_period: availableRoomsInPeriod, // Số phòng trống trong khoảng thời gian tìm kiếm
           rooms: roomsWithPhotos
         };
       })

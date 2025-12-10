@@ -67,7 +67,7 @@ const LoginPage = () => {
 
 
   return (
-    <div className="relative p-10 grid place-items-center text-[#f9f8fa] ">
+    <div className="relative p-10 grid place-items-center text-[#f9f8fa]">
       {/* Background waves animation */}
       <div className="absolute top-0 left-0 w-full h-full">
         <Image
@@ -79,22 +79,20 @@ const LoginPage = () => {
       </div>
 
       {/* Login form */}
-      <div className=" z-[2] bg-[rgb(6_5_7/25%)]  backdrop-blur-[38px] shadow-[0_40px_30px_rgb(0_0_0_/_10%)] rounded-[40px] h-[500px] w-[380px] flex flex-col gap-5 items-center justify-center text-center">
-        {/* <img src="" alt="Logo" className="w-[74px] mb-8" /> */}
+      <div className="z-[2] bg-[rgba(6,5,7,0.25)] backdrop-blur-[38px] shadow-[0_40px_30px_rgba(0,0,0,0.1)] rounded-[40px] h-[500px] w-[380px] flex flex-col gap-5 items-center justify-center text-center">
         <div>
           <p className="text-4xl">
             <b>
-              {" "}
-              <span className="text-[#2c1c0d]"> Chào mừng đến với </span> VadiGo
+              <span className="text-[#2c1c0d]">Chào mừng đến với </span>VadiGo
             </b>
           </p>
-          <p className="text-lg"> Rất vui được gặp bạn!</p>
+          <p className="text-lg">Rất vui được gặp bạn!</p>
         </div>
 
         <div>
-          <form className="grid gap-3 w-76 " onSubmit={handleLogin}>
+          <form className="grid gap-3 w-76" onSubmit={handleLogin}>
             {/* Email Field */}
-            <div className=" relative">
+            <div className="relative">
               <input
                 required
                 value={email}
@@ -102,14 +100,13 @@ const LoginPage = () => {
                 type="email"
                 id="email-input"
                 placeholder="Email"
-                className={`w-full h-14 !pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none
-                focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d]
-                ${email ? "bg-[#E8F0FE] text-black" : ""}
-                transition-all duration-300`}
+                className={`w-full h-14 pl-5 rounded-lg text-[#f9f8fa] outline-none focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d] transition-all duration-300 ${
+                  email ? "bg-[#E8F0FE] text-black" : "bg-[#6f5b47]"
+                }`}
               />
             </div>
 
-            <div className=" relative">
+            <div className="relative">
               <input
                 required
                 type="password"
@@ -118,10 +115,9 @@ const LoginPage = () => {
                 placeholder="Mật khẩu"
                 value={password}
                 onChange={handleChange}
-                className={`w-full h-14 !pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none
-                focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d]
-                ${password ? "bg-[#E8F0FE] text-black" : ""}
-                transition-all duration-300`}
+                className={`w-full h-14 pl-5 rounded-lg text-[#f9f8fa] outline-none focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d] transition-all duration-300 ${
+                  password ? "bg-[#E8F0FE] text-black" : "bg-[#6f5b47]"
+                }`}
               />
             </div>
 
@@ -140,9 +136,9 @@ const LoginPage = () => {
             href=""
             className="text-[#b1aca9] text-lg hover:text-[#f9f9f9]"
           >
-           Quên mật khẩu?
+            Quên mật khẩu?
           </Link>
-          <p className=" text-lg">
+          <p className="text-lg">
             Chưa có tài khoản?{" "}
             <Link
               href={"/register"}
