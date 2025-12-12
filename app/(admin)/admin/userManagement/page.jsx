@@ -361,9 +361,9 @@ const UserManagement = () => {
               <th className="border px-4 py-2 text-left">ID</th>
               <th className="border px-4 py-2 text-left">Tên</th>
               <th className="border px-4 py-2 text-left">Avatar</th>
-              <th className="border px-4 py-2 text-left">Giới tính</th>
               <th className="border px-4 py-2 text-left">Địa chỉ</th>
               <th className="border px-4 py-2 text-left">Phone</th>
+              <th className="border px-4 py-2 text-left">Email</th>
               <th className="border px-4 py-2 text-left">Vai trò</th>
               <th className="border px-4 py-2 text-left">Hành động</th>
             </tr>
@@ -391,9 +391,9 @@ const UserManagement = () => {
                       </div>
                     )}
                   </td>
-                  <td className="border px-4 py-2">{getGenderLabel(user.gender)}</td>
                   <td className="border px-4 py-2">{user.address || "Chưa cập nhật"}</td>
                   <td className="border px-4 py-2">{user.phone || "Chưa cập nhật"}</td>
+                  <td className="border px-4 py-2">{user.email || "Chưa cập nhật"}</td>
                   <td className="border px-4 py-2">
                     <span
                       className={`px-2 py-1 rounded text-sm ${

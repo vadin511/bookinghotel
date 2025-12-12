@@ -86,11 +86,25 @@ export async function GET(req) {
     let startDate, endDate, previousStartDate, previousEndDate, daysInPeriod;
 
     if (startDateParam && endDateParam) {
-      // Sử dụng date range từ params
-      startDate = new Date(startDateParam);
-      startDate.setHours(0, 0, 0, 0);
-      endDate = new Date(endDateParam);
-      endDate.setHours(23, 59, 59, 999);
+      // Sử dụng date range từ params - parse thủ công để tránh timezone issues
+      const [startYear, startMonth, startDay] = startDateParam.split('-').map(Number);
+      startDate = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0);
+      
+      const [endYear, endMonth, endDay] = endDateParam.split('-').map(Number);
+      const requestedEndDate = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999);
+      
+      // Nếu endDate là trong tháng hiện tại và chưa đến ngày cuối tháng, sử dụng ngày hiện tại
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      const currentDay = now.getDate();
+      
+      if (endYear === currentYear && endMonth - 1 === currentMonth && endDay > currentDay) {
+        // Tháng hiện tại chưa kết thúc, sử dụng ngày hiện tại
+        endDate = new Date(currentYear, currentMonth, currentDay, 23, 59, 59, 999);
+      } else {
+        endDate = requestedEndDate;
+      }
       
       // Tính kỳ trước (cùng độ dài)
       const daysDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
@@ -297,7 +311,13 @@ export async function GET(req) {
     const daysDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
     let chartData, chartLabels, chartLabel;
 
-    if (daysDiff <= 30) {
+    // Kiểm tra nếu là tháng hiện tại và chưa kết thúc, luôn hiển thị theo ngày
+    const now = new Date();
+    const isCurrentMonth = endDate.getFullYear() === now.getFullYear() && 
+                           endDate.getMonth() === now.getMonth() &&
+                           endDate.getDate() <= now.getDate();
+
+    if (daysDiff <= 30 || isCurrentMonth) {
       // Nếu <= 30 ngày: chia theo ngày
       chartLabel = "Theo Ngày";
       let revenueByDayQuery = `
@@ -333,21 +353,40 @@ export async function GET(req) {
       bookingsByDayQuery += ` GROUP BY DATE(created_at) ORDER BY date`;
       const [bookingsByDay] = await db.query(bookingsByDayQuery, bookingsByDayParams);
 
-      // Tạo array đầy đủ các ngày
+      // Tạo array đầy đủ các ngày - sử dụng local date để tránh timezone issues
       const allDates = [];
-      const currentDate = new Date(startDate);
-      while (currentDate <= endDate) {
-        allDates.push(new Date(currentDate).toISOString().split('T')[0]);
+      // Tạo date objects từ startDate và endDate để so sánh chính xác
+      const startDateForLoop = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+      // Đảm bảo không vượt quá ngày hiện tại
+      const nowForLoop = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const endDateForLoop = endDate > nowForLoop ? nowForLoop : new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+      const currentDate = new Date(startDateForLoop);
+      
+      while (currentDate <= endDateForLoop) {
+        // Format date theo local time, không dùng toISOString để tránh timezone shift
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        allDates.push(`${year}-${month}-${day}`);
         currentDate.setDate(currentDate.getDate() + 1);
       }
 
       chartLabels = allDates.map(date => {
-        const d = new Date(date);
-        return `${d.getDate()}/${d.getMonth() + 1}`;
+        const [year, month, day] = date.split('-').map(Number);
+        return `${day}/${month}`;
       });
 
-      const revenueMap = new Map(revenueByDay.map(item => [item.date.toISOString().split('T')[0], parseFloat(item.revenue)]));
-      const bookingsMap = new Map(bookingsByDay.map(item => [item.date.toISOString().split('T')[0], item.count]));
+      // Format dates từ database theo local time
+      const formatDateLocal = (date) => {
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
+      const revenueMap = new Map(revenueByDay.map(item => [formatDateLocal(item.date), parseFloat(item.revenue)]));
+      const bookingsMap = new Map(bookingsByDay.map(item => [formatDateLocal(item.date), item.count]));
 
       chartData = {
         revenue: allDates.map(date => revenueMap.get(date) || 0),
@@ -442,13 +481,21 @@ export async function GET(req) {
       };
     }
 
+    // Format dates cho response - sử dụng local time
+    const formatDateForResponse = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
     return NextResponse.json({
       hotelId: hotelId ? parseInt(hotelId) : null,
       periodRange: {
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
-        previousStartDate: previousStartDate.toISOString().split('T')[0],
-        previousEndDate: previousEndDate.toISOString().split('T')[0],
+        startDate: formatDateForResponse(startDate),
+        endDate: formatDateForResponse(endDate),
+        previousStartDate: formatDateForResponse(previousStartDate),
+        previousEndDate: formatDateForResponse(previousEndDate),
       },
       stats: {
         totalRevenue: currentRevenue,

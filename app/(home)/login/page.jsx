@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import bgLogin from "../../../public/assets/images/bgLogin.png";
-import { loginUser, selectLoginStatus, resetLoginStatus } from "../../store/features/userSlice";
+import { loginUser, selectLoginStatus, resetLoginStatus, fetchUserProfile } from "../../store/features/userSlice";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -46,6 +46,9 @@ const LoginPage = () => {
       if (loginUser.fulfilled.match(resultAction)) {
         toast.success(resultAction.payload.message);
         resetForm();
+        
+        // Fetch user profile ngay sau khi đăng nhập thành công
+        await dispatch(fetchUserProfile());
         
         // Nếu có redirect URL, quay về trang đó
         if (redirectUrl) {

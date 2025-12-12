@@ -4,7 +4,7 @@ import db from "../../../../lib/db";
 
 export async function GET(req, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const { searchParams } = new URL(req.url);
     const check_in = searchParams.get("check_in");
     const check_out = searchParams.get("check_out");

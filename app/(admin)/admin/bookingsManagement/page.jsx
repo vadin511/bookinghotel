@@ -39,6 +39,7 @@ const BookingsPage = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("newest"); // "newest" or "oldest"
+  const [bookingDateFilter, setBookingDateFilter] = useState(""); // Filter by booking date (created_at)
 
   useEffect(() => {
     dispatch(fetchBookings());
@@ -212,6 +213,24 @@ const BookingsPage = () => {
         const userName = (booking.user_name || "").toLowerCase();
         const userEmail = (booking.user_email || booking.email || "").toLowerCase();
         if (!userName.includes(searchLower) && !userEmail.includes(searchLower)) {
+          return false;
+        }
+      }
+      
+      // Filter by booking date (created_at)
+      if (bookingDateFilter) {
+        const bookingDate = booking.created_at ? new Date(booking.created_at) : null;
+        if (bookingDate) {
+          const filterDate = new Date(bookingDateFilter);
+          // So sánh chỉ theo ngày (bỏ qua giờ)
+          bookingDate.setHours(0, 0, 0, 0);
+          filterDate.setHours(0, 0, 0, 0);
+          
+          if (bookingDate.getTime() !== filterDate.getTime()) {
+            return false;
+          }
+        } else {
+          // Nếu booking không có created_at và có filter date thì loại bỏ
           return false;
         }
       }
@@ -546,7 +565,7 @@ const BookingsPage = () => {
       {/* Filters and Search */}
       <div className="mb-6 space-y-4">
         <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search by name or email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -580,6 +599,31 @@ const BookingsPage = () => {
                 <option value="cancelled">Đã hủy</option>
                 <option value="completed">Hoàn thành</option>
               </select>
+            </div>
+
+            {/* Filter by booking date */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Lọc theo ngày đặt phòng:
+              </label>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={bookingDateFilter}
+                  onChange={(e) => setBookingDateFilter(e.target.value)}
+                  className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base"
+                />
+                <i className="fas fa-calendar-alt absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                {bookingDateFilter && (
+                  <button
+                    onClick={() => setBookingDateFilter("")}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    title="Xóa bộ lọc ngày"
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Sort order */}
@@ -631,7 +675,7 @@ const BookingsPage = () => {
             Không tìm thấy booking
           </h2>
           <p className="text-gray-500 text-lg">
-            {searchTerm || statusFilter !== "all"
+            {searchTerm || statusFilter !== "all" || bookingDateFilter
               ? "Không có đặt phòng nào phù hợp với bộ lọc đã chọn."
               : "Không có đặt phòng nào với trạng thái đã chọn."}
           </p>

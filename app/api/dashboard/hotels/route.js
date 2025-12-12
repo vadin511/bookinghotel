@@ -95,11 +95,12 @@ export async function GET(req) {
     let startDate, endDate, previousStartDate, previousEndDate, periodLabel, daysInPeriod;
 
     if (startDateParam && endDateParam) {
-      // Sử dụng date range từ params
-      startDate = new Date(startDateParam);
-      startDate.setHours(0, 0, 0, 0);
-      endDate = new Date(endDateParam);
-      endDate.setHours(23, 59, 59, 999);
+      // Sử dụng date range từ params - parse thủ công để tránh timezone issues
+      const [startYear, startMonth, startDay] = startDateParam.split('-').map(Number);
+      startDate = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0);
+      
+      const [endYear, endMonth, endDay] = endDateParam.split('-').map(Number);
+      endDate = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999);
       
       // Tính kỳ trước (cùng độ dài)
       const daysDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
@@ -184,18 +185,22 @@ export async function GET(req) {
             AND b5.created_at >= ?
             AND b5.created_at <= ?
         ), 0) as previous_period_bookings,
-        -- Tổng doanh thu (tất cả thời gian)
+        -- Tổng doanh thu (trong khoảng thời gian được chọn)
         COALESCE((
           SELECT SUM(b6.total_price)
           FROM bookings b6
           WHERE b6.hotel_id = h.id
+            AND b6.created_at >= ?
+            AND b6.created_at <= ?
             AND b6.status IN ('confirmed', 'paid')
         ), 0) as total_revenue,
-        -- Tổng số đặt phòng (tất cả thời gian) - đếm DISTINCT để tránh trùng lặp
+        -- Tổng số đặt phòng (trong khoảng thời gian được chọn) - đếm DISTINCT để tránh trùng lặp
         COALESCE((
           SELECT COUNT(DISTINCT b7.id)
           FROM bookings b7
           WHERE b7.hotel_id = h.id
+            AND b7.created_at >= ?
+            AND b7.created_at <= ?
         ), 0) as total_bookings,
         -- Số đêm đã đặt kỳ hiện tại
         COALESCE((
@@ -215,6 +220,8 @@ export async function GET(req) {
       previousStartDateStr, previousEndDateStr,
       startDateStr, endDateStr,
       previousStartDateStr, previousEndDateStr,
+      startDateStr, endDateStr,
+      startDateStr, endDateStr,
       startDateStr, endDateStr
     ]);
 
@@ -258,12 +265,20 @@ export async function GET(req) {
       };
     });
 
+    // Format dates cho response - sử dụng local time
+    const formatDateForResponse = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
     return NextResponse.json({
       periodRange: {
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
-        previousStartDate: previousStartDate.toISOString().split('T')[0],
-        previousEndDate: previousEndDate.toISOString().split('T')[0],
+        startDate: formatDateForResponse(startDate),
+        endDate: formatDateForResponse(endDate),
+        previousStartDate: formatDateForResponse(previousStartDate),
+        previousEndDate: formatDateForResponse(previousEndDate),
       },
       hotels: hotelsWithStats,
     }, {

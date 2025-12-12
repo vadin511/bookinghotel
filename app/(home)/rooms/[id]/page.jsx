@@ -15,6 +15,7 @@ import { fetchRoomById } from "../../../store/features/roomSlice";
 import { fetchUserProfile, selectUser } from "../../../store/features/userSlice";
 
 import Loading from "@/components/common/Loading";
+import BookingCalendar from "@/components/common/BookingCalendar";
 
 const RoomDetailPage = () => {
   const dispatch = useDispatch();
@@ -37,8 +38,11 @@ const RoomDetailPage = () => {
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [showCalendar, setShowCalendar] = useState(false);
   const checkInRef = useRef();
   const checkOutRef = useRef();
+  const calendarButtonRef = useRef();
+  const calendarRef = useRef();
 
   // ----------------------------------------
   // Lấy dữ liệu phòng + user profile + room types
@@ -148,6 +152,31 @@ const RoomDetailPage = () => {
       console.log('First photo URL:', roomDetail.photos[0]);
     }
   }, [roomDetail?.photos]);
+
+  // ----------------------------------------
+  // Close calendar when clicking outside
+  // ----------------------------------------
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        showCalendar &&
+        calendarRef.current &&
+        calendarButtonRef.current &&
+        !calendarRef.current.contains(event.target) &&
+        !calendarButtonRef.current.contains(event.target)
+      ) {
+        setShowCalendar(false);
+      }
+    };
+
+    if (showCalendar) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showCalendar]);
 
   // ----------------------------------------
   // Xử lý đặt phòng
@@ -425,32 +454,59 @@ const RoomDetailPage = () => {
           <h2 className="text-xl font-semibold text-[#5a4330] mb-4">Đặt phòng</h2>
           
           <div className="flex flex-col md:flex-row gap-3 md:gap-4 items-end">
-            {/* DATE INPUTS - COMPACT */}
-            <div className="flex-1 grid grid-cols-2 gap-3">
-              <div>
-                <label className="block mb-1 text-sm font-medium text-[#5a4330]">Nhận phòng</label>
-                <input
-                  ref={checkInRef}
-                  type="date"
-                  value={checkIn}
-                  onChange={(e) => setCheckIn(e.target.value)}
-                  onFocus={() => checkInRef.current?.showPicker()}
-                  min={new Date().toISOString().split("T")[0]}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-700 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block mb-1 text-sm font-medium text-[#5a4330]">Trả phòng</label>
-                <input
-                  ref={checkOutRef}
-                  type="date"
-                  value={checkOut}
-                  onChange={(e) => setCheckOut(e.target.value)}
-                  onFocus={() => checkOutRef.current?.showPicker()}
-                  min={checkIn || new Date().toISOString().split("T")[0]}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-700 focus:border-transparent"
-                />
-              </div>
+            {/* DATE SELECTOR WITH CALENDAR */}
+            <div className="flex-1 relative" ref={calendarButtonRef}>
+              <label className="block mb-1 text-sm font-medium text-[#5a4330]">Chọn ngày</label>
+              <button
+                type="button"
+                onClick={() => setShowCalendar(!showCalendar)}
+                className="w-full flex items-center justify-between px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <i className="far fa-calendar-alt text-gray-400"></i>
+                  {checkIn && checkOut ? (
+                    <span className="text-gray-700">
+                      {(() => {
+                        const [y1, m1, d1] = checkIn.split('-').map(Number);
+                        const [y2, m2, d2] = checkOut.split('-').map(Number);
+                        const date1 = new Date(y1, m1 - 1, d1);
+                        const date2 = new Date(y2, m2 - 1, d2);
+                        return date1.toLocaleDateString("vi-VN", {
+                          day: "numeric",
+                          month: "short"
+                        }) + " — " + date2.toLocaleDateString("vi-VN", {
+                          day: "numeric",
+                          month: "short"
+                        });
+                      })()}
+                    </span>
+                  ) : (
+                    <span className="text-gray-500">Chọn ngày nhận phòng và trả phòng</span>
+                  )}
+                </div>
+                <i className={`fas fa-chevron-${showCalendar ? 'up' : 'down'} text-gray-400 text-xs`}></i>
+              </button>
+              
+              {showCalendar && (
+                <div ref={calendarRef}>
+                  <BookingCalendar
+                    checkIn={checkIn}
+                    checkOut={checkOut}
+                    onCheckInChange={(date) => {
+                      setCheckIn(date);
+                      if (checkOut && date >= checkOut) {
+                        setCheckOut("");
+                      }
+                    }}
+                    onCheckOutChange={(date) => {
+                      setCheckOut(date);
+                    }}
+                    roomId={id}
+                    pricePerNight={roomDetail?.price_per_night}
+                    onClose={() => setShowCalendar(false)}
+                  />
+                </div>
+              )}
             </div>
 
             {/* ADULTS - COMPACT */}

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
+import BookingCalendar from "@/components/common/BookingCalendar";
 
 const SearchRoom = ({ initialDestination = "", initialCheckIn = "", initialCheckOut = "", initialAdults = 1 }) => {
   const router = useRouter();
@@ -19,6 +20,8 @@ const SearchRoom = ({ initialDestination = "", initialCheckIn = "", initialCheck
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateError, setDateError] = useState("");
   const datePickerRef = useRef(null);
+  const calendarButtonRef = useRef(null);
+  const calendarRef = useRef(null);
   const destinationRef = useRef(null);
   const suggestionItemsRef = useRef([]); // Ref cho các item suggestions
   const checkInRef = useRef();
@@ -186,8 +189,11 @@ const SearchRoom = ({ initialDestination = "", initialCheckIn = "", initialCheck
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        datePickerRef.current &&
-        !datePickerRef.current.contains(event.target)
+        showDatePicker &&
+        calendarRef.current &&
+        calendarButtonRef.current &&
+        !calendarRef.current.contains(event.target) &&
+        !calendarButtonRef.current.contains(event.target)
       ) {
         setShowDatePicker(false);
       }
@@ -209,17 +215,24 @@ const SearchRoom = ({ initialDestination = "", initialCheckIn = "", initialCheck
     };
   }, [showDatePicker, showSuggestions]);
 
+  // Parse date string to Date object (local time, no timezone issues)
+  const parseDateString = (dateStr) => {
+    if (!dateStr) return null;
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   // Validation ngày tháng
   useEffect(() => {
     if (checkIn && checkOut) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const checkInDate = new Date(checkIn);
-      const checkOutDate = new Date(checkOut);
+      const checkInDate = parseDateString(checkIn);
+      const checkOutDate = parseDateString(checkOut);
 
-      if (checkInDate < today) {
+      if (checkInDate && checkInDate < today) {
         setDateError("Ngày check-in không được là quá khứ");
-      } else if (checkOutDate <= checkInDate) {
+      } else if (checkInDate && checkOutDate && checkOutDate <= checkInDate) {
         setDateError("Ngày check-out phải sau ngày check-in");
       } else {
         setDateError("");
@@ -232,7 +245,9 @@ const SearchRoom = ({ initialDestination = "", initialCheckIn = "", initialCheck
   // Format ngày tháng để hiển thị
   const formatDate = (dateString) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
+    // Parse date string safely without timezone issues
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
     return date.toLocaleDateString("vi-VN", {
       day: "numeric",
       month: "short",
@@ -336,6 +351,7 @@ const SearchRoom = ({ initialDestination = "", initialCheckIn = "", initialCheck
       <div className="relative flex-1 md:flex-initial min-w-0" ref={datePickerRef}>
         <button
           type="button"
+          ref={calendarButtonRef}
           onClick={() => setShowDatePicker(!showDatePicker)}
           className="relative w-full flex items-center justify-center gap-2 border border-gray-300 rounded-full text-[#5a3f26] text-sm sm:text-base md:text-lg lg:text-2xl cursor-pointer h-12 md:h-auto pl-8 sm:pl-10 md:pl-12 pr-6 sm:pr-8 md:pr-10 py-2 md:py-4 bg-[#F1F1F1] hover:bg-gray-50 transition-colors"
         >
@@ -357,49 +373,26 @@ const SearchRoom = ({ initialDestination = "", initialCheckIn = "", initialCheck
           </div>
         </button>
 
-        {/* Date Picker Dropdown */}
+        {/* Calendar Component */}
         {showDatePicker && (
-          <div className="absolute top-full left-0 right-0 md:right-auto mt-2 bg-[#F1F1F1] border border-gray-300 rounded-lg shadow-lg p-4 z-50 w-full md:min-w-[300px]">
-            <div className="space-y-3">
-              <div>
-                <label className="block text-base font-medium text-gray-700 mb-1">
-                  Nhận phòng:
-                </label>
-                <input
-                  type="date"
-                  value={checkIn}
-                  ref={checkInRef}
-                  onChange={(e) => setCheckIn(e.target.value)}
-                  onFocus={() => checkInRef.current.showPicker()}
-                  min={new Date().toISOString().split("T")[0]}
-                  className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
-                />
-              </div>
-              <div>
-                <label className="block text-base font-medium text-gray-700 mb-1">
-                  Trả phòng:
-                </label>
-                <input
-                  type="date"
-                  ref={checkOutRef}
-                  value={checkOut}
-                  onChange={(e) => setCheckOut(e.target.value)}
-                  min={checkIn || new Date().toISOString().split("T")[0]}
-                  onFocus={() => checkOutRef.current.showPicker()}
-                  className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
-                />
-              </div>
-              {dateError && (
-                <p className="text-red-600 text-base">{dateError}</p>
-              )}
-              <button
-                type="button"
-                onClick={() => setShowDatePicker(false)}
-                className="w-full bg-amber-700 text-white py-2 rounded-lg hover:bg-amber-800 transition-colors"
-              >
-                Xác nhận
-              </button>
-            </div>
+          <div ref={calendarRef}>
+            <BookingCalendar
+              checkIn={checkIn}
+              checkOut={checkOut}
+              onCheckInChange={(date) => {
+                setCheckIn(date);
+                if (checkOut && date >= checkOut) {
+                  setCheckOut("");
+                }
+              }}
+              onCheckOutChange={(date) => {
+                setCheckOut(date);
+              }}
+              roomId={null}
+              pricePerNight={null}
+              disableBookedDates={false}
+              onClose={() => setShowDatePicker(false)}
+            />
           </div>
         )}
       </div>
@@ -409,7 +402,7 @@ const SearchRoom = ({ initialDestination = "", initialCheckIn = "", initialCheck
         <div className="flex items-center justify-between gap-2 sm:gap-3 md:gap-5 border border-gray-300 rounded-full text-[#5a3f26] text-sm sm:text-base md:text-lg lg:text-2xl h-12 md:h-auto pl-8 sm:pl-10 md:pl-12 pr-6 sm:pr-8 md:pr-10 py-2 md:py-4 bg-[#F1F1F1]">
           <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm md:text-base lg:text-lg">
             <i className="fas fa-user-friends text-xs sm:text-sm"></i>
-            <span className="hidden sm:inline">Người lớn:</span>
+            <span className="hidden sm:inline">Số người:</span>
             <span className="sm:hidden">Người:</span>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
