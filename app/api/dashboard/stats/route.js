@@ -147,7 +147,7 @@ export async function GET(req) {
     let revenueQuery = `
       SELECT COALESCE(SUM(total_price), 0) as total
       FROM bookings
-      WHERE status IN ('confirmed', 'paid')
+      WHERE status = 'completed'
         AND created_at >= ?
         AND created_at <= ?
     `;
@@ -164,7 +164,7 @@ export async function GET(req) {
     let previousRevenueQuery = `
       SELECT COALESCE(SUM(total_price), 0) as total
       FROM bookings
-      WHERE status IN ('confirmed', 'paid')
+      WHERE status = 'completed'
         AND created_at >= ?
         AND created_at <= ?
     `;
@@ -225,7 +225,7 @@ export async function GET(req) {
     let occupiedNightsQuery = `
       SELECT SUM(DATEDIFF(check_out, check_in)) as nights
       FROM bookings
-      WHERE status IN ('confirmed', 'paid')
+      WHERE status = 'completed'
         AND created_at >= ?
         AND created_at <= ?
     `;
@@ -259,7 +259,7 @@ export async function GET(req) {
     let previousOccupiedNightsQuery = `
       SELECT SUM(DATEDIFF(check_out, check_in)) as nights
       FROM bookings
-      WHERE status IN ('confirmed', 'paid')
+      WHERE status = 'completed'
         AND created_at >= ?
         AND created_at <= ?
     `;
@@ -325,7 +325,7 @@ export async function GET(req) {
           DATE(created_at) as date,
           COALESCE(SUM(total_price), 0) as revenue
         FROM bookings
-        WHERE status IN ('confirmed', 'paid')
+        WHERE status = 'completed'
           AND created_at >= ?
           AND created_at <= ?
       `;
@@ -401,7 +401,7 @@ export async function GET(req) {
           WEEK(created_at) as week,
           COALESCE(SUM(total_price), 0) as revenue
         FROM bookings
-        WHERE status IN ('confirmed', 'paid')
+        WHERE status = 'completed'
           AND created_at >= ?
           AND created_at <= ?
       `;
@@ -444,7 +444,7 @@ export async function GET(req) {
           YEAR(created_at) as year,
           COALESCE(SUM(total_price), 0) as revenue
         FROM bookings
-        WHERE status IN ('confirmed', 'paid')
+        WHERE status = 'completed'
           AND created_at >= ?
           AND created_at <= ?
       `;

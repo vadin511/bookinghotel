@@ -147,37 +147,101 @@ const MyBookingsPage = () => {
   // Tự động cập nhật status thành cancelled nếu quá check-out và vẫn pending (chưa được xác nhận)
   useEffect(() => {
     const autoCancelPendingBookings = async () => {
-      if (!bookings.length || !user) return;
+      if (!bookings.length || !user) {
+        console.log("[Auto Cancel] Không có bookings hoặc user:", { 
+          bookingsLength: bookings.length, 
+          hasUser: !!user 
+        });
+        return;
+      }
+
+      // DEBUG: Log tất cả bookings pending để kiểm tra
+      const allPendingBookings = bookings.filter(b => b.status === "pending");
+      console.log("[Auto Cancel] Tất cả bookings pending:", allPendingBookings.map(b => ({
+        id: b.id,
+        user_id: b.user_id,
+        current_user_id: user.id,
+        check_out: b.check_out,
+        status: b.status
+      })));
 
       const bookingsToCancel = bookings.filter(
-        (booking) =>
-          booking.status === "pending" &&
-          booking.check_out &&
-          isAfterCheckOut(booking.check_out) &&
-          parseInt(booking.user_id) === parseInt(user.id) // Đảm bảo booking thuộc về user hiện tại
+        (booking) => {
+          const isPending = booking.status === "pending";
+          const hasCheckOut = !!booking.check_out;
+          const isAfter = hasCheckOut ? isAfterCheckOut(booking.check_out) : false;
+          const isOwner = parseInt(booking.user_id) === parseInt(user.id);
+          
+          // DEBUG: Log từng điều kiện cho mỗi booking
+          if (isPending && hasCheckOut) {
+            console.log(`[Auto Cancel] Booking ${booking.id} kiểm tra:`, {
+              isPending,
+              hasCheckOut,
+              isAfter,
+              isOwner,
+              check_out: booking.check_out,
+              booking_user_id: booking.user_id,
+              current_user_id: user.id,
+              user_id_match: parseInt(booking.user_id) === parseInt(user.id)
+            });
+          }
+          
+          return isPending && hasCheckOut && isAfter && isOwner;
+        }
       );
+
+      console.log("[Auto Cancel] Số lượng bookings sẽ bị hủy:", bookingsToCancel.length);
+      if (bookingsToCancel.length > 0) {
+        console.log("[Auto Cancel] Danh sách bookings sẽ hủy:", bookingsToCancel.map(b => b.id));
+      }
 
       if (bookingsToCancel.length > 0) {
         // Cập nhật từng booking
         let hasUpdates = false;
+        let needsRefresh = false; // Cần refresh nếu có booking đã bị hủy bởi process khác
+        
         for (const booking of bookingsToCancel) {
           try {
-            await dispatch(
+            // Kiểm tra xem booking đã bị hủy chưa (tránh lỗi 400)
+            // Lưu ý: Filter đã chỉ lấy status = "pending", nhưng kiểm tra này vẫn cần để tránh race condition
+            if (booking.status === "cancelled" || booking.status === "completed") {
+              console.log(`Booking ${booking.id} đã có status ${booking.status}, bỏ qua`);
+              continue;
+            }
+            
+            // Đảm bảo status được set thành "cancelled" khi hệ thống tự động hủy
+            console.log(`[System Auto Cancel] Đang hủy booking ${booking.id} - Status hiện tại: ${booking.status}`);
+            
+            const result = await dispatch(
               updateBookingStatus({
                 bookingId: booking.id,
-                status: "cancelled",
+                status: "cancelled", // BẮT BUỘC phải là "cancelled" khi hệ thống tự hủy
                 cancellation_reason: "Phòng đã bị hủy do chưa được xác nhận",
+                cancellation_type: "system", // Đánh dấu là hệ thống tự động hủy
               })
             ).unwrap();
-            hasUpdates = true;
+            
+            // Xác nhận status đã được cập nhật thành "cancelled"
+            if (result.new_status === "cancelled") {
+              console.log(`[System Auto Cancel] ✅ Booking ${booking.id} đã được hủy thành công - Status: ${result.new_status}`);
+              hasUpdates = true;
+            } else {
+              console.error(`[System Auto Cancel] ⚠️ Booking ${booking.id} không được cập nhật đúng status. Mong đợi: "cancelled", Nhận được: ${result.new_status}`);
+            }
           } catch (error) {
-            // Chỉ log lỗi nếu không phải lỗi đã hủy hoặc permission
+            // Xử lý lỗi: nếu booking đã bị hủy hoặc hoàn thành, đây là trường hợp hợp lệ
+            // (có thể đã bị hủy bởi cron job, admin, hoặc user khác)
             const errorMessage = error?.message || error?.toString() || "";
+            
             if (
-              !errorMessage.includes("đã bị hủy") &&
-              !errorMessage.includes("đã hoàn thành") &&
-              !errorMessage.includes("chỉ có thể hủy")
+              errorMessage.includes("đã bị hủy") ||
+              errorMessage.includes("đã hoàn thành") ||
+              errorMessage.includes("chỉ có thể hủy")
             ) {
+              // Booking đã bị hủy bởi process khác, cần refresh để đồng bộ data
+              needsRefresh = true;
+            } else {
+              // Lỗi thực sự, log để debug
               console.error(
                 `Error auto-cancelling booking ${booking.id}:`,
                 error
@@ -185,8 +249,9 @@ const MyBookingsPage = () => {
             }
           }
         }
-        // Chỉ refresh nếu có ít nhất một booking được cập nhật thành công
-        if (hasUpdates) {
+        
+        // Refresh nếu có booking được cập nhật thành công hoặc cần đồng bộ data
+        if (hasUpdates || needsRefresh) {
           dispatch(fetchBookings());
         }
       }
@@ -219,7 +284,10 @@ const MyBookingsPage = () => {
 
   // Kiểm tra xem đã QUÁ check-out chưa (12:00 PM ngày checkout)
   const isAfterCheckOut = (checkOutDate) => {
-    if (!checkOutDate) return false;
+    if (!checkOutDate) {
+      console.log("[isAfterCheckOut] Không có checkOutDate");
+      return false;
+    }
     try {
       // Lấy thời gian hiện tại
       const now = new Date();
@@ -250,24 +318,47 @@ const MyBookingsPage = () => {
       
       // Kiểm tra nếu parse không thành công
       if (isNaN(checkOutDateOnly.getTime())) {
-        console.error("Invalid check-out date:", checkOutDate);
+        console.error("[isAfterCheckOut] Invalid check-out date:", checkOutDate);
         return false;
       }
+      
+      // DEBUG: Log thông tin so sánh
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const checkOutStr = `${checkOutDateOnly.getFullYear()}-${String(checkOutDateOnly.getMonth() + 1).padStart(2, '0')}-${String(checkOutDateOnly.getDate()).padStart(2, '0')}`;
+      const nowTime = now.getTime();
+      const checkOutAt12PMTime = checkOutAt12PM.getTime();
+      
+      console.log("[isAfterCheckOut] So sánh:", {
+        checkOutDate: checkOutDate,
+        checkOutStr,
+        todayStr,
+        now: now.toISOString(),
+        checkOutAt12PM: checkOutAt12PM.toISOString(),
+        isPastDate: checkOutDateOnly < today,
+        isToday: checkOutDateOnly.getTime() === today.getTime(),
+        nowTime,
+        checkOutAt12PMTime,
+        isAfter12PM: now >= checkOutAt12PM
+      });
       
       // Logic: đã quá checkout nếu:
       // 1. Ngày checkout < hôm nay HOẶC
       // 2. Ngày checkout = hôm nay VÀ giờ hiện tại >= 12:00 PM
       if (checkOutDateOnly < today) {
+        console.log("[isAfterCheckOut] ✅ Đã qua ngày checkout");
         return true; // Đã qua ngày checkout
       }
       
       if (checkOutDateOnly.getTime() === today.getTime()) {
-        return now >= checkOutAt12PM; // Cùng ngày, kiểm tra giờ >= 12:00 PM
+        const result = now >= checkOutAt12PM;
+        console.log(`[isAfterCheckOut] ${result ? '✅' : '❌'} Cùng ngày, kiểm tra giờ >= 12:00 PM:`, result);
+        return result; // Cùng ngày, kiểm tra giờ >= 12:00 PM
       }
       
+      console.log("[isAfterCheckOut] ❌ Chưa tới ngày checkout");
       return false; // Chưa tới ngày checkout
     } catch (error) {
-      console.error("Error checking check-out date:", error, checkOutDate);
+      console.error("[isAfterCheckOut] Error checking check-out date:", error, checkOutDate);
       return false;
     }
   };

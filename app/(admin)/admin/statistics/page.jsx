@@ -18,14 +18,23 @@ const HotelStatistics = () => {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     return `${year}-${month}`;
   });
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null); // null hoặc YYYY-MM-DD
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(() => {
+    const now = new Date();
+    return now.getFullYear().toString();
+  });
+  const [yearInputValue, setYearInputValue] = useState(() => {
+    const now = new Date();
+    return now.getFullYear().toString();
+  });
   const [sortBy, setSortBy] = useState("name"); // "name", "revenue", "bookings"
   const [periodInfo, setPeriodInfo] = useState(null);
   const [overviewStats, setOverviewStats] = useState(null);
   const router = useRouter();
 
-  // Tính toán startDate và endDate - ưu tiên selectedDate, nếu không có thì dùng selectedMonth
+  // Tính toán startDate và endDate - ưu tiên selectedDate, nếu không có thì dùng selectedMonth, nếu không có thì dùng selectedYear
   const { startDate, endDate } = useMemo(() => {
     // Format date theo local time để tránh timezone issues
     const formatDateLocal = (date) => {
@@ -46,18 +55,45 @@ const HotelStatistics = () => {
       };
     }
 
-    // Nếu không có chọn ngày, dùng tháng
-    if (!selectedMonth) return { startDate: null, endDate: null };
-    
-    const [year, month] = selectedMonth.split('-').map(Number);
-    const startDateObj = new Date(year, month - 1, 1);
-    const endDateObj = new Date(year, month, 0); // Ngày cuối cùng của tháng
-    
-    return {
-      startDate: formatDateLocal(startDateObj),
-      endDate: formatDateLocal(endDateObj)
-    };
-  }, [selectedMonth, selectedDate]);
+    // Nếu không có chọn ngày, kiểm tra xem có đang chọn tháng không
+    // Nếu đang chọn tháng (showMonthPicker = true), ưu tiên tháng
+    if (showMonthPicker && selectedMonth) {
+      const [year, month] = selectedMonth.split('-').map(Number);
+      const startDateObj = new Date(year, month - 1, 1);
+      const endDateObj = new Date(year, month, 0); // Ngày cuối cùng của tháng
+      
+      return {
+        startDate: formatDateLocal(startDateObj),
+        endDate: formatDateLocal(endDateObj)
+      };
+    }
+
+    // Nếu không có chọn tháng, dùng năm (mặc định)
+    if (selectedYear) {
+      const year = parseInt(selectedYear);
+      const startDateObj = new Date(year, 0, 1); // 1/1 của năm
+      const endDateObj = new Date(year, 11, 31); // 31/12 của năm
+      
+      return {
+        startDate: formatDateLocal(startDateObj),
+        endDate: formatDateLocal(endDateObj)
+      };
+    }
+
+    // Fallback: dùng tháng nếu có
+    if (selectedMonth) {
+      const [year, month] = selectedMonth.split('-').map(Number);
+      const startDateObj = new Date(year, month - 1, 1);
+      const endDateObj = new Date(year, month, 0); // Ngày cuối cùng của tháng
+      
+      return {
+        startDate: formatDateLocal(startDateObj),
+        endDate: formatDateLocal(endDateObj)
+      };
+    }
+
+    return { startDate: null, endDate: null };
+  }, [selectedMonth, selectedDate, selectedYear, showMonthPicker]);
 
   // Format số tiền
   const formatCurrency = (amount) => {
@@ -304,38 +340,89 @@ const HotelStatistics = () => {
         {/* Filter */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            {/* Month picker và Date picker */}
+            {/* Year picker, Month picker và Date picker */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-gray-700">
                   <i className="fas fa-calendar-alt mr-2"></i>
-                  Chọn tháng
+                  Chọn năm
                 </label>
-                <button
-                  onClick={() => {
-                    setShowDatePicker(!showDatePicker);
-                    if (showDatePicker) {
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setShowMonthPicker(!showMonthPicker);
+                      if (showMonthPicker) {
+                        const now = new Date();
+                        const year = now.getFullYear();
+                        const month = String(now.getMonth() + 1).padStart(2, '0');
+                        setSelectedMonth(`${year}-${month}`);
+                      }
+                      setShowDatePicker(false);
                       setSelectedDate(null);
-                    }
-                  }}
-                  className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
-                >
-                  <i className="fas fa-calendar-day mr-1"></i>
-                  Chọn ngày
-                </button>
+                    }}
+                    className={`text-sm font-medium ${
+                      showMonthPicker 
+                        ? "text-indigo-800 font-semibold" 
+                        : "text-indigo-600 hover:text-indigo-800"
+                    }`}
+                  >
+                    <i className="fas fa-calendar-alt mr-1"></i>
+                    Chọn tháng
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDatePicker(!showDatePicker);
+                      if (showDatePicker) {
+                        setSelectedDate(null);
+                      }
+                      setShowMonthPicker(false);
+                    }}
+                    className={`text-sm font-medium ${
+                      showDatePicker 
+                        ? "text-indigo-800 font-semibold" 
+                        : "text-indigo-600 hover:text-indigo-800"
+                    }`}
+                  >
+                    <i className="fas fa-calendar-day mr-1"></i>
+                    Chọn ngày
+                  </button>
+                  {(selectedDate || showMonthPicker || showDatePicker || (selectedYear && selectedYear !== new Date().getFullYear().toString())) && (
+                    <button
+                      onClick={() => {
+                        // Reset tất cả bộ lọc về mặc định
+                        const now = new Date();
+                        const currentYear = now.getFullYear().toString();
+                        setYearInputValue(currentYear);
+                        setSelectedYear(currentYear);
+                        setSelectedDate(null);
+                        setShowDatePicker(false);
+                        setShowMonthPicker(false);
+                        const year = now.getFullYear();
+                        const month = String(now.getMonth() + 1).padStart(2, '0');
+                        setSelectedMonth(`${year}-${month}`);
+                      }}
+                      className="text-sm text-red-600 hover:text-red-800 font-medium"
+                      title="Xóa bộ lọc"
+                    >
+                      <i className="fas fa-times-circle"></i>
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="space-y-2">
-                <input
-                  type="month"
-                  value={selectedMonth}
-                  onChange={(e) => {
-                    setSelectedMonth(e.target.value);
-                    setSelectedDate(null); // Xóa lọc ngày khi chọn tháng mới
-                  }}
-                  max={new Date().toISOString().slice(0, 7)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                />
-                {showDatePicker && (
+                {showMonthPicker ? (
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={(e) => {
+                      setSelectedMonth(e.target.value);
+                      setSelectedDate(null); // Xóa lọc ngày khi chọn tháng mới
+                      setShowDatePicker(false);
+                    }}
+                    max={new Date().toISOString().slice(0, 7)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                ) : showDatePicker ? (
                   <div className="relative">
                     <input
                       type="date"
@@ -356,6 +443,59 @@ const HotelStatistics = () => {
                       </button>
                     )}
                   </div>
+                ) : (
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={yearInputValue}
+                      onChange={(e) => {
+                        const year = e.target.value;
+                        // Cho phép nhập bất kỳ, chỉ chấp nhận số - chỉ update input value, không trigger fetch
+                        if (year === "" || /^\d+$/.test(year)) {
+                          setYearInputValue(year);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        // Validate khi blur: nếu để trống hoặc không hợp lệ, reset về năm hiện tại
+                        const year = e.target.value;
+                        const yearNum = parseInt(year);
+                        const currentYear = new Date().getFullYear();
+                        let finalYear;
+                        if (!year || isNaN(yearNum) || yearNum < 2020 || yearNum > currentYear) {
+                          finalYear = currentYear.toString();
+                        } else {
+                          // Đảm bảo giá trị hợp lệ
+                          finalYear = yearNum.toString();
+                        }
+                        setYearInputValue(finalYear);
+                        // Chỉ update selectedYear khi blur - trigger fetch
+                        if (finalYear !== selectedYear) {
+                          setSelectedYear(finalYear);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        // Cho phép các phím điều hướng và xóa
+                        if (e.key === 'Enter') {
+                          e.target.blur();
+                        }
+                      }}
+                      placeholder="Nhập năm (ví dụ: 2024)"
+                      className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                    {selectedYear && selectedYear !== new Date().getFullYear().toString() && (
+                      <button
+                        onClick={() => {
+                          const currentYear = new Date().getFullYear().toString();
+                          setYearInputValue(currentYear);
+                          setSelectedYear(currentYear);
+                        }}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        title="Reset về năm hiện tại"
+                      >
+                        <i className="fas fa-times"></i>
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
               {periodInfo && (
@@ -363,6 +503,10 @@ const HotelStatistics = () => {
                   <i className="fas fa-info-circle mr-1"></i>
                   {selectedDate 
                     ? `Ngày ${periodInfo.startDate}`
+                    : showMonthPicker && selectedMonth
+                    ? `Từ ngày ${periodInfo.startDate} - ${periodInfo.endDate}`
+                    : selectedYear
+                    ? `Năm ${selectedYear}: Từ ngày ${periodInfo.startDate} - ${periodInfo.endDate}`
                     : `Từ ngày ${periodInfo.startDate} - ${periodInfo.endDate}`
                   }
                 </div>

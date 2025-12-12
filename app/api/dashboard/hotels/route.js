@@ -158,7 +158,7 @@ export async function GET(req) {
           WHERE b2.hotel_id = h.id
             AND b2.created_at >= ?
             AND b2.created_at <= ?
-            AND b2.status IN ('confirmed', 'paid')
+            AND b2.status = 'completed'
         ), 0) as current_period_revenue,
         -- Doanh thu kỳ trước
         COALESCE((
@@ -167,7 +167,7 @@ export async function GET(req) {
           WHERE b3.hotel_id = h.id
             AND b3.created_at >= ?
             AND b3.created_at <= ?
-            AND b3.status IN ('confirmed', 'paid')
+            AND b3.status = 'completed'
         ), 0) as previous_period_revenue,
         -- Số đặt phòng kỳ hiện tại - đếm DISTINCT để tránh trùng lặp
         COALESCE((
@@ -192,7 +192,7 @@ export async function GET(req) {
           WHERE b6.hotel_id = h.id
             AND b6.created_at >= ?
             AND b6.created_at <= ?
-            AND b6.status IN ('confirmed', 'paid')
+            AND b6.status = 'completed'
         ), 0) as total_revenue,
         -- Tổng số đặt phòng (trong khoảng thời gian được chọn) - đếm DISTINCT để tránh trùng lặp
         COALESCE((
@@ -209,7 +209,7 @@ export async function GET(req) {
           WHERE b8.hotel_id = h.id
             AND b8.created_at >= ?
             AND b8.created_at <= ?
-            AND b8.status IN ('confirmed', 'paid')
+            AND b8.status = 'completed'
         ), 0) as occupied_nights
       FROM hotels h
       LEFT JOIN rooms r ON h.id = r.hotel_id AND r.status = 'available'

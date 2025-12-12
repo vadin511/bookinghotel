@@ -263,35 +263,74 @@ export async function PUT(req, { params }) {
           }
         }
       } else if (error.code === 'ER_DATA_TOO_LONG' || error.errno === 1406 || error.message?.includes('Data truncated')) {
-        // Lỗi do status không khớp với ENUM
-        console.error("Status value doesn't match ENUM:", { 
+        // Lỗi do ENUM không khớp - có thể là status hoặc cancellation_type
+        console.error("Data truncated error:", { 
           status: statusToUpdate, 
+          cancellation_type: finalCancellationType,
           error: error.message 
         });
         
-        // Thử query để xem ENUM values có sẵn
-        try {
-          const [enumInfo] = await db.query(`
-            SELECT COLUMN_TYPE 
-            FROM INFORMATION_SCHEMA.COLUMNS 
-            WHERE TABLE_SCHEMA = DATABASE() 
-            AND TABLE_NAME = 'bookings' 
-            AND COLUMN_NAME = 'status'
-          `);
-          console.error("Available ENUM values:", enumInfo);
-        } catch (enumError) {
-          console.error("Could not fetch ENUM info:", enumError);
+        // Kiểm tra xem lỗi có liên quan đến cancellation_type không
+        if (error.message?.includes('cancellation_type')) {
+          console.warn("Lỗi liên quan đến cancellation_type, thử update không có cancellation_type");
+          try {
+            // Thử update không có cancellation_type
+            sql = `
+              UPDATE bookings 
+              SET status = ?, cancellation_reason = ?
+              WHERE id = ?
+            `;
+            queryParams = [statusToUpdate, cancellation_reason || null, id];
+            await db.query(sql, queryParams);
+            console.log("Update successful without cancellation_type");
+            // Tiếp tục xử lý email và response như bình thường
+          } catch (error3) {
+            console.error("Error updating without cancellation_type:", error3);
+            // Nếu vẫn lỗi, có thể là lỗi status ENUM
+            return NextResponse.json(
+              { 
+                message: `Lỗi cập nhật: ${error.message}. Vui lòng kiểm tra ENUM của status và cancellation_type trong database.`,
+                error: error.message,
+                hint: "Cần chạy script fix_cancellation_type.sql để sửa cột cancellation_type",
+                receivedStatus: status,
+                cleanedStatus: statusToUpdate,
+                cancellation_type: finalCancellationType
+              },
+              { status: 400 }
+            );
+          }
+        } else {
+          // Lỗi liên quan đến status ENUM
+          console.error("Status value doesn't match ENUM:", { 
+            status: statusToUpdate, 
+            error: error.message 
+          });
+          
+          // Thử query để xem ENUM values có sẵn
+          try {
+            const [enumInfo] = await db.query(`
+              SELECT COLUMN_TYPE 
+              FROM INFORMATION_SCHEMA.COLUMNS 
+              WHERE TABLE_SCHEMA = DATABASE() 
+              AND TABLE_NAME = 'bookings' 
+              AND COLUMN_NAME = 'status'
+            `);
+            console.error("Available ENUM values for status:", enumInfo);
+          } catch (enumError) {
+            console.error("Could not fetch ENUM info:", enumError);
+          }
+          
+          return NextResponse.json(
+            { 
+              message: `Giá trị status "${statusToUpdate}" không hợp lệ. Vui lòng kiểm tra lại.`,
+              error: error.message,
+              hint: "Cần chạy script check_and_fix_booking_status.sql để sửa ENUM của status",
+              receivedStatus: status,
+              cleanedStatus: statusToUpdate
+            },
+            { status: 400 }
+          );
         }
-        
-        return NextResponse.json(
-          { 
-            message: `Giá trị status "${statusToUpdate}" không hợp lệ. Vui lòng kiểm tra lại.`,
-            error: error.message,
-            receivedStatus: status,
-            cleanedStatus: statusToUpdate
-          },
-          { status: 400 }
-        );
       } else {
         console.error("Unhandled database error:", error);
         throw error;
