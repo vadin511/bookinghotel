@@ -184,11 +184,15 @@ export async function GET(req) {
       );
     }
 
-    // Nếu là admin, lấy tất cả bookings
+    // Nếu là admin, lấy tất cả bookings hoặc lọc theo user_id
     if (user.role === "admin") {
+      // Kiểm tra query parameter user_id
+      const { searchParams } = new URL(req.url);
+      const userIdParam = searchParams.get("user_id");
+      
       let bookings = [];
       try {
-        const [bookingsResult] = await db.query(`
+        let query = `
           SELECT b.*,
                  h.name AS hotel_name, h.address AS hotel_address,
                  u.email AS user_email, 
@@ -196,8 +200,17 @@ export async function GET(req) {
           FROM bookings b
           LEFT JOIN hotels h ON b.hotel_id = h.id
           LEFT JOIN users u ON b.user_id = u.id
-          ORDER BY b.created_at DESC
-        `);
+        `;
+        
+        const queryParams = [];
+        if (userIdParam) {
+          query += ` WHERE b.user_id = ?`;
+          queryParams.push(userIdParam);
+        }
+        
+        query += ` ORDER BY b.created_at DESC`;
+        
+        const [bookingsResult] = await db.query(query, queryParams);
         bookings = bookingsResult || [];
       } catch (err) {
         console.error("Error fetching bookings:", err);

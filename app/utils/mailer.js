@@ -56,7 +56,7 @@ export async function sendBookingConfirmationEmail(to, bookingData) {
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <p>Xin chào <strong>${user_name}</strong>,</p>
-      <p>Cảm ơn bạn đã đặt phòng tại hệ thống của chúng tôi. Đặt phòng của bạn đã được tiếp nhận .</p>
+      <p>Cảm ơn bạn đã đặt phòng tại hệ thống của chúng tôi. Đặt phòng của bạn đã được xác nhận thành công .</p>
       
       <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
         <h3 style="margin-top: 0; color: #1f2937;">Thông tin đặt phòng</h3>
@@ -78,7 +78,7 @@ export async function sendBookingConfirmationEmail(to, bookingData) {
   return transporter.sendMail({
     from: process.env.FROM_EMAIL,
     to: to,
-    subject: 'Tiếp nhận đặt phòng!',
+    subject: 'Xác nhận đặt phòng thành công!',
     html: htmlContent,
     text: `
 

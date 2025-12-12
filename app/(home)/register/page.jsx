@@ -5,16 +5,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { toast } from "react-toastify";
 import bgLogin from "../../../public/assets/images/bgLogin.png";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
   const [otp, setOTP] = useState("");
   const [step, setStep] = useState("register");
+  const [errors, setErrors] = useState({});
+  const [otpError, setOtpError] = useState("");
   const router = useRouter();
   const dispatch = useDispatch();
 
@@ -24,30 +24,70 @@ export default function RegisterPage() {
     return regex.test(password);
   };
 
+  const validateRegisterForm = () => {
+    const newErrors = {};
+    
+    // Validate name
+    if (!name.trim()) {
+      newErrors.name = "Họ tên không được để trống";
+    } else if (name.trim().length < 2) {
+      newErrors.name = "Họ tên phải có ít nhất 2 ký tự";
+    }
+    
+    // Validate email
+    if (!email) {
+      newErrors.email = "Email không được để trống";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Email không hợp lệ";
+    }
+    
+    // Validate password
+    if (!password) {
+      newErrors.password = "Mật khẩu không được để trống";
+    } else if (!checkPasswordStrength(password)) {
+      newErrors.password = "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    if (checkPasswordStrength(password)) {
-      const res = await fetch("/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, email, password }),
-      });
-      const data = await res.json();
+    // Validate form
+    if (!validateRegisterForm()) {
+      return;
+    }
 
-      if (data.step === "otp") {
-        toast.success(data.message);
-        setStep("otp");
+    const res = await fetch("/api/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, email, password }),
+    });
+    const data = await res.json();
+
+    if (data.step === "otp") {
+      setStep("otp");
+      setErrors({});
+    } else if (data.error) {
+      // Handle API errors
+      if (data.error.includes("Email") || data.error.includes("email")) {
+        setErrors({ ...errors, email: data.error });
+      } else {
+        setErrors({ ...errors, email: data.error });
       }
-      setMessage(data.message || "Đăng ký thành công");
-    } else {
-      toast.error("Mật khẩu quá yếu. Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt");
     }
   };
 
   const handleVerifyOTP = async () => {
+    if (!otp.trim()) {
+      setOtpError("Mã OTP không được để trống");
+      return;
+    }
+
     const res = await fetch("/api/verify-otp", {
       method: "POST",
       headers: {
@@ -59,10 +99,9 @@ export default function RegisterPage() {
     const data = await res.json();
 
     if (data.success) {
-      toast.success(data.message);
       router.push("/login");
     } else {
-      toast.error(data.message || "Xác nhận OTP thất bại");
+      setOtpError(data.message || "Xác nhận OTP thất bại");
     }
   };
 
@@ -87,48 +126,78 @@ export default function RegisterPage() {
 
         {step === "register" && (
           <form onSubmit={handleRegister} className="grid gap-3 w-76 ">
-            <input
-              type="text"
-              placeholder="Họ tên"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={`w-full h-12 sm:h-14 !pl-4 sm:!pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none text-sm sm:text-base
-                focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d]
-                ${name ? "bg-[#E8F0FE] text-black" : ""}
-                transition-all duration-300`}
-              required
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={`w-full h-12 sm:h-14 !pl-4 sm:!pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none text-sm sm:text-base
-                focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d]
-                ${email ? "bg-[#E8F0FE] text-black" : ""}
-                transition-all duration-300`}
-              required
-            />
-            <input
-              type="password"
-              placeholder="Mật khẩu"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={`w-full h-12 sm:h-14 !pl-4 sm:!pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none text-sm sm:text-base
-                focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d]
-                ${password ? "bg-[#E8F0FE] text-black" : ""}
-                transition-all duration-300`}
-              required
-            />
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Họ tên"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (errors.name) {
+                    setErrors({ ...errors, name: "" });
+                  }
+                }}
+                className={`w-full h-12 sm:h-14 !pl-4 sm:!pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none text-sm sm:text-base
+                  focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d]
+                  ${name ? "bg-[#E8F0FE] text-black" : ""}
+                  ${errors.name ? "border-2 border-red-500" : ""}
+                  transition-all duration-300`}
+                required
+              />
+              {errors.name && (
+                <p className="text-red-500 text-sm mt-1 text-left">{errors.name}</p>
+              )}
+            </div>
+            <div className="relative">
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) {
+                    setErrors({ ...errors, email: "" });
+                  }
+                }}
+                className={`w-full h-12 sm:h-14 !pl-4 sm:!pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none text-sm sm:text-base
+                  focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d]
+                  ${email ? "bg-[#E8F0FE] text-black" : ""}
+                  ${errors.email ? "border-2 border-red-500" : ""}
+                  transition-all duration-300`}
+                required
+              />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1 text-left">{errors.email}</p>
+              )}
+            </div>
+            <div className="relative">
+              <input
+                type="password"
+                placeholder="Mật khẩu"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) {
+                    setErrors({ ...errors, password: "" });
+                  }
+                }}
+                className={`w-full h-12 sm:h-14 !pl-4 sm:!pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none text-sm sm:text-base
+                  focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d]
+                  ${password ? "bg-[#E8F0FE] text-black" : ""}
+                  ${errors.password ? "border-2 border-red-500" : ""}
+                  transition-all duration-300`}
+                required
+              />
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1 text-left">{errors.password}</p>
+              )}
+            </div>
             <button
               type="submit"
               className="h-12 sm:h-14 px-4 rounded-lg bg-[#2c1c0d] text-[#f9f9f9] text-lg sm:text-xl cursor-pointer hover:bg-[#251f16] transition-colors duration-300"
             >
               Đăng ký
             </button>
-            {message && (
-              <p className="text-base text-green-400 text-center">{message}</p>
-            )}
           </form>
         )}
         <div className="flex flex-col gap-6 sm:gap-8 md:gap-10">
@@ -145,16 +214,27 @@ export default function RegisterPage() {
 
         {step === "otp" && (
           <div className="w-76 grid gap-4">
-            <input
-              value={otp}
-              onChange={(e) => setOTP(e.target.value)}
-              placeholder="Nhập mã OTP"
-              className={`w-full h-12 sm:h-14 !pl-4 sm:!pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none text-sm sm:text-base
-                focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d]
-                ${otp ? "bg-[#E8F0FE] text-black" : ""}
-                transition-all duration-300`}
-              required
-            />
+            <div className="relative">
+              <input
+                value={otp}
+                onChange={(e) => {
+                  setOTP(e.target.value);
+                  if (otpError) {
+                    setOtpError("");
+                  }
+                }}
+                placeholder="Nhập mã OTP"
+                className={`w-full h-12 sm:h-14 !pl-4 sm:!pl-5 rounded-lg bg-[#6f5b47] text-[#f9f8fa] outline-none text-sm sm:text-base
+                  focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d]
+                  ${otp ? "bg-[#E8F0FE] text-black" : ""}
+                  ${otpError ? "border-2 border-red-500" : ""}
+                  transition-all duration-300`}
+                required
+              />
+              {otpError && (
+                <p className="text-red-500 text-sm mt-1 text-left">{otpError}</p>
+              )}
+            </div>
             <button
               onClick={handleVerifyOTP}
               className="h-12 sm:h-14 px-4 rounded-lg bg-[#2c1c0d] text-[#f9f9f9] text-lg sm:text-xl cursor-pointer hover:bg-[#251f16] transition-colors duration-300"

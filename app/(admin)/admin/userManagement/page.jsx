@@ -21,6 +21,9 @@ const UserManagement = () => {
   });
   const [selectedUser, setSelectedUser] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isBookingHistoryModalOpen, setIsBookingHistoryModalOpen] = useState(false);
+  const [bookingHistory, setBookingHistory] = useState([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
   const [roleFilter, setRoleFilter] = useState("all");
   const [formData, setFormData] = useState({
     id: null,
@@ -316,6 +319,63 @@ const UserManagement = () => {
     });
   };
 
+  const formatDateShort = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("vi-VN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const openBookingHistoryModal = async (user) => {
+    setSelectedUser(user);
+    setIsBookingHistoryModalOpen(true);
+    setLoadingBookings(true);
+    
+    try {
+      const res = await fetch(`http://localhost:3000/api/bookings?user_id=${user.id}`, {
+        credentials: "include",
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setBookingHistory(data || []);
+      } else {
+        toast.error("Lỗi khi tải lịch sử đặt phòng!");
+        setBookingHistory([]);
+      }
+    } catch (error) {
+      console.error("Lỗi khi fetch booking history:", error);
+      toast.error("Lỗi khi tải lịch sử đặt phòng!");
+      setBookingHistory([]);
+    } finally {
+      setLoadingBookings(false);
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    const statusMap = {
+      pending: { text: "Chờ xác nhận", color: "bg-yellow-100 text-yellow-800" },
+      confirmed: { text: "Đã xác nhận", color: "bg-blue-100 text-blue-800" },
+      paid: { text: "Đã thanh toán", color: "bg-green-100 text-green-800" },
+      completed: { text: "Hoàn thành", color: "bg-purple-100 text-purple-800" },
+      cancelled: { text: "Đã hủy", color: "bg-red-100 text-red-800" },
+    };
+    return statusMap[status] || { text: status || "N/A", color: "bg-gray-100 text-gray-800" };
+  };
+
+  const getPaymentMethodLabel = (method) => {
+    const methodMap = {
+      momo: "MoMo",
+      vnpay: "VNPay",
+      bank_transfer: "Chuyển khoản",
+      cod: "Thanh toán tại khách sạn",
+    };
+    return methodMap[method] || method || "Chưa thanh toán";
+  };
+
   return (
     <div className="p-6">
       <h2 className="text-3xl font-bold mb-4">Quản lý Người dùng</h2>
@@ -412,6 +472,11 @@ const UserManagement = () => {
                           label: "Xem chi tiết",
                           icon: "fas fa-eye",
                           onClick: () => openDetailModal(user),
+                        },
+                        {
+                          label: "Xem lịch sử đặt phòng",
+                          icon: "fas fa-calendar-check",
+                          onClick: () => openBookingHistoryModal(user),
                         },
                         {
                           divider: true,
@@ -781,6 +846,177 @@ const UserManagement = () => {
                 >
                   <i className={`fas ${selectedUser.status === "blocked" ? "fa-check-circle" : "fa-eye-slash"}`}></i>
                   <span>{selectedUser.status === "blocked" ? "Kích hoạt" : "Ẩn"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Booking History Modal */}
+      {isBookingHistoryModalOpen && selectedUser && (
+        <div 
+          className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center animate-fadeIn p-4"
+          onClick={() => {
+            setIsBookingHistoryModalOpen(false);
+            setBookingHistory([]);
+          }}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-blue-700 to-blue-800 text-white p-6 rounded-t-2xl">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold mb-2">
+                    Lịch sử đặt phòng
+                  </h2>
+                  <p className="text-sm opacity-90">
+                    {selectedUser.name || selectedUser.full_name || `User #${selectedUser.id}`} - {selectedUser.email}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsBookingHistoryModalOpen(false);
+                    setBookingHistory([]);
+                  }}
+                  className="ml-4 p-2 hover:bg-blue-600 rounded-lg transition-colors"
+                >
+                  <i className="fas fa-times text-xl"></i>
+                </button>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6">
+              {loadingBookings ? (
+                <div className="flex justify-center items-center py-12">
+                  <Loading message="Đang tải lịch sử đặt phòng..." color="blue" size="md" />
+                </div>
+              ) : bookingHistory.length === 0 ? (
+                <div className="text-center py-12">
+                  <i className="fas fa-calendar-times text-6xl text-gray-300 mb-4"></i>
+                  <p className="text-gray-600 text-lg">Khách hàng này chưa có lịch sử đặt phòng</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {bookingHistory.map((booking) => {
+                    const statusInfo = getStatusLabel(booking.status);
+                    const firstRoom = booking.rooms && booking.rooms.length > 0 ? booking.rooms[0] : null;
+                    
+                    return (
+                      <div
+                        key={booking.id}
+                        className="bg-gray-50 rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              <h3 className="text-lg font-semibold text-gray-800">
+                                {booking.hotel_name || "Khách sạn"}
+                              </h3>
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
+                                {statusInfo.text}
+                              </span>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <p className="text-gray-600 mb-1">
+                                  <i className="fas fa-calendar-check mr-2 text-blue-600"></i>
+                                  Check-in: <span className="font-medium text-gray-800">{formatDateShort(booking.check_in)}</span>
+                                </p>
+                                <p className="text-gray-600 mb-1">
+                                  <i className="fas fa-calendar-times mr-2 text-red-600"></i>
+                                  Check-out: <span className="font-medium text-gray-800">{formatDateShort(booking.check_out)}</span>
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-600 mb-1">
+                                  <i className="fas fa-bed mr-2 text-purple-600"></i>
+                                  Phòng: <span className="font-medium text-gray-800">
+                                    {firstRoom?.room_name || "N/A"}
+                                    {booking.rooms?.length > 1 && ` (+${booking.rooms.length - 1} phòng khác)`}
+                                  </span>
+                                </p>
+                                <p className="text-gray-600 mb-1">
+                                  <i className="fas fa-money-bill-wave mr-2 text-green-600"></i>
+                                  Tổng tiền: <span className="font-medium text-gray-800">
+                                    {new Intl.NumberFormat("vi-VN", {
+                                      style: "currency",
+                                      currency: "VND",
+                                    }).format(booking.total_price || 0)}
+                                  </span>
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-600 mb-1">
+                                  <i className="fas fa-credit-card mr-2 text-indigo-600"></i>
+                                  Phương thức: <span className="font-medium text-gray-800">
+                                    {getPaymentMethodLabel(booking.payment_method)}
+                                  </span>
+                                </p>
+                                <p className="text-gray-600 mb-1">
+                                  <i className="fas fa-clock mr-2 text-gray-600"></i>
+                                  Ngày đặt: <span className="font-medium text-gray-800">
+                                    {formatDate(booking.created_at)}
+                                  </span>
+                                </p>
+                              </div>
+                              {booking.hotel_address && (
+                                <div>
+                                  <p className="text-gray-600 mb-1">
+                                    <i className="fas fa-map-marker-alt mr-2 text-red-600"></i>
+                                    Địa chỉ: <span className="font-medium text-gray-800">{booking.hotel_address}</span>
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+
+                            {booking.rooms && booking.rooms.length > 1 && (
+                              <div className="mt-3 pt-3 border-t border-gray-200">
+                                <p className="text-sm font-medium text-gray-700 mb-2">
+                                  <i className="fas fa-list mr-2"></i>
+                                  Danh sách phòng ({booking.rooms.length}):
+                                </p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                  {booking.rooms.map((room, idx) => (
+                                    <div key={idx} className="bg-white rounded p-2 text-sm">
+                                      <span className="font-medium">{room.room_name || `Phòng ${idx + 1}`}</span>
+                                      <span className="text-gray-600 ml-2">
+                                        - {new Intl.NumberFormat("vi-VN", {
+                                          style: "currency",
+                                          currency: "VND",
+                                        }).format(room.subtotal || 0)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 rounded-b-2xl">
+              <div className="flex items-center justify-end">
+                <button
+                  onClick={() => {
+                    setIsBookingHistoryModalOpen(false);
+                    setBookingHistory([]);
+                  }}
+                  className="px-5 py-2.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-all duration-200 flex items-center space-x-2 shadow-sm hover:shadow-md"
+                >
+                  <i className="fas fa-times"></i>
+                  <span>Đóng</span>
                 </button>
               </div>
             </div>

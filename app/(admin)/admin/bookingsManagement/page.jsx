@@ -155,26 +155,38 @@ const BookingsPage = () => {
     return now >= checkIn;
   };
 
-  // Kiểm tra xem đã QUÁ check-out chưa (phải là ngày sau check-out, không tính ngày check-out)
+  // Kiểm tra xem đã QUÁ check-out chưa (12:00 PM ngày checkout)
   const isAfterCheckOut = (checkOutDate) => {
     if (!checkOutDate) return false;
     try {
       const checkOut = new Date(checkOutDate);
       const now = new Date();
       
-      // Reset về 00:00:00 để so sánh chỉ theo ngày
-      checkOut.setHours(0, 0, 0, 0);
+      // Lấy ngày check-out (không tính giờ)
+      const checkOutDateOnly = new Date(checkOut.getFullYear(), checkOut.getMonth(), checkOut.getDate());
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       
+      // Tạo thời điểm 12:00 PM ngày checkout
+      const checkOutAt12PM = new Date(checkOut.getFullYear(), checkOut.getMonth(), checkOut.getDate(), 12, 0, 0);
+      
       // Kiểm tra nếu parse không thành công
-      if (isNaN(checkOut.getTime())) {
+      if (isNaN(checkOutDateOnly.getTime())) {
         console.error("Invalid check-out date:", checkOutDate);
         return false;
       }
       
-      // So sánh: chỉ trả về true nếu hôm nay > ngày check-out (đã QUÁ check-out)
-      // Nếu hôm nay = ngày check-out thì vẫn chưa quá
-      return today > checkOut;
+      // Logic: đã quá checkout nếu:
+      // 1. Ngày checkout < hôm nay HOẶC
+      // 2. Ngày checkout = hôm nay VÀ giờ hiện tại >= 12:00 PM
+      if (checkOutDateOnly < today) {
+        return true; // Đã qua ngày checkout
+      }
+      
+      if (checkOutDateOnly.getTime() === today.getTime()) {
+        return now >= checkOutAt12PM; // Cùng ngày, kiểm tra giờ >= 12:00 PM
+      }
+      
+      return false; // Chưa tới ngày checkout
     } catch (error) {
       console.error("Error checking check-out date:", error, checkOutDate);
       return false;
@@ -1051,7 +1063,7 @@ const BookingsPage = () => {
               {cancellationReasonDialog.booking.cancellation_type && (
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Người hủyhủy:
+                    Người hủy:
                   </label>
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-base font-medium text-gray-800">

@@ -28,14 +28,16 @@ export async function POST(req) {
       );
     }
 
-    // Lấy ngày hiện tại (chỉ so sánh theo ngày, không tính giờ)
+    // Lấy thời gian hiện tại để kiểm tra 12:00 PM ngày checkout
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const checkoutTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0); // 12:00 PM hôm nay
 
-    console.log(`[Auto Cancel Cron] Đang kiểm tra booking pending quá checkout vào ${today.toISOString()}`);
+    console.log(`[Auto Cancel Cron] Đang kiểm tra booking pending quá checkout vào ${now.toISOString()}`);
 
-    // Tìm tất cả booking có status = "pending" và đã QUÁ checkout (phải là ngày sau check-out)
-    const [pendingBookings] = await db.query(
+    // Tìm tất cả booking có status = "pending" và đã QUÁ checkout
+    // Logic: ngày checkout < hôm nay HOẶC (ngày checkout = hôm nay VÀ giờ hiện tại >= 12:00 PM)
+    const [allPendingBookings] = await db.query(
       `
       SELECT b.id, b.user_id, b.check_in, b.check_out, b.status, b.total_price,
              h.name AS hotel_name,
@@ -45,11 +47,30 @@ export async function POST(req) {
       LEFT JOIN users u ON b.user_id = u.id
       WHERE b.status = 'pending'
         AND b.check_out IS NOT NULL
-        AND DATE(b.check_out) < DATE(?)
+        AND DATE(b.check_out) <= DATE(?)
       ORDER BY b.check_out ASC
     `,
       [today]
     );
+
+    // Filter để chỉ lấy booking đã quá 12:00 PM ngày checkout
+    const pendingBookings = allPendingBookings.filter(booking => {
+      const checkoutDate = new Date(booking.check_out);
+      const checkoutDateOnly = new Date(checkoutDate.getFullYear(), checkoutDate.getMonth(), checkoutDate.getDate());
+      const checkoutDateAt12PM = new Date(checkoutDate.getFullYear(), checkoutDate.getMonth(), checkoutDate.getDate(), 12, 0, 0);
+      
+      // Nếu ngày checkout < hôm nay → đã quá
+      if (checkoutDateOnly < today) {
+        return true;
+      }
+      
+      // Nếu ngày checkout = hôm nay → kiểm tra giờ hiện tại >= 12:00 PM
+      if (checkoutDateOnly.getTime() === today.getTime()) {
+        return now >= checkoutDateAt12PM;
+      }
+      
+      return false;
+    });
 
     console.log(`[Auto Cancel Cron] Tìm thấy ${pendingBookings.length} booking cần hủy`);
 
@@ -210,12 +231,13 @@ export async function GET(req) {
       );
     }
 
-    // Lấy ngày hiện tại
+    // Lấy thời gian hiện tại để kiểm tra 12:00 PM ngày checkout
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     // Tìm tất cả booking có status = "pending" và đã quá checkout
-    const [pendingBookings] = await db.query(
+    // Logic: ngày checkout < hôm nay HOẶC (ngày checkout = hôm nay VÀ giờ hiện tại >= 12:00 PM)
+    const [allPendingBookings] = await db.query(
       `
       SELECT b.id, b.user_id, b.check_in, b.check_out, b.status, b.created_at,
              h.name AS hotel_name,
@@ -225,11 +247,30 @@ export async function GET(req) {
       LEFT JOIN users u ON b.user_id = u.id
       WHERE b.status = 'pending'
         AND b.check_out IS NOT NULL
-        AND DATE(b.check_out) < DATE(?)
+        AND DATE(b.check_out) <= DATE(?)
       ORDER BY b.check_out ASC
     `,
       [today]
     );
+
+    // Filter để chỉ lấy booking đã quá 12:00 PM ngày checkout
+    const pendingBookings = allPendingBookings.filter(booking => {
+      const checkoutDate = new Date(booking.check_out);
+      const checkoutDateOnly = new Date(checkoutDate.getFullYear(), checkoutDate.getMonth(), checkoutDate.getDate());
+      const checkoutDateAt12PM = new Date(checkoutDate.getFullYear(), checkoutDate.getMonth(), checkoutDate.getDate(), 12, 0, 0);
+      
+      // Nếu ngày checkout < hôm nay → đã quá
+      if (checkoutDateOnly < today) {
+        return true;
+      }
+      
+      // Nếu ngày checkout = hôm nay → kiểm tra giờ hiện tại >= 12:00 PM
+      if (checkoutDateOnly.getTime() === today.getTime()) {
+        return now >= checkoutDateAt12PM;
+      }
+      
+      return false;
+    });
 
     return NextResponse.json({
       message: `Tìm thấy ${pendingBookings.length} booking pending đã quá checkout`,

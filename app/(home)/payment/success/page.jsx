@@ -49,7 +49,7 @@ const PaymentSuccessPage = () => {
         {orderId && (
           <div className="mt-4 mb-4 p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-gray-600 mb-1">
-              <span className="font-semibold">Mã đơn hàng:</span> {orderId}
+              <span className="font-semibold">Mã đơn hàng:</span> {bookingId}
             </p>
             {transId && (
               <p className="text-sm text-gray-600">

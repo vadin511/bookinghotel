@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "react-toastify";
 import bgLogin from "../../../public/assets/images/bgLogin.png";
 import { loginUser, selectLoginStatus, resetLoginStatus, fetchUserProfile } from "../../store/features/userSlice";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState({});
   const dispatch = useDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -25,6 +25,28 @@ const LoginPage = () => {
   const resetForm = () => {
     setEmail("");
     setPassword("");
+    setErrors({});
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Validate email
+    if (!email) {
+      newErrors.email = "Email không được để trống";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Email không hợp lệ";
+    }
+    
+    // Validate password
+    if (!password) {
+      newErrors.password = "Mật khẩu không được để trống";
+    } else if (password.length < 6) {
+      newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleChange = (e) => {
@@ -32,19 +54,31 @@ const LoginPage = () => {
     const { value, type } = e.target;
     if (type === "email") {
       setEmail(value);
+      // Clear error when user starts typing
+      if (errors.email) {
+        setErrors({ ...errors, email: "" });
+      }
     } else if (type === "password") {
       setPassword(value);
+      // Clear error when user starts typing
+      if (errors.password) {
+        setErrors({ ...errors, password: "" });
+      }
     }
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     
+    // Validate form
+    if (!validateForm()) {
+      return;
+    }
+    
     try {
       const resultAction = await dispatch(loginUser({ email, password }));
       
       if (loginUser.fulfilled.match(resultAction)) {
-        toast.success(resultAction.payload.message);
         resetForm();
         
         // Fetch user profile ngay sau khi đăng nhập thành công
@@ -61,10 +95,17 @@ const LoginPage = () => {
         
       } else if (loginUser.rejected.match(resultAction)) {
         const errorMessage = resultAction.payload || "Đăng nhập thất bại";
-        toast.error(errorMessage);
+        // Set error for email or password based on error message
+        if (errorMessage.includes("Email") || errorMessage.includes("email")) {
+          setErrors({ email: errorMessage, password: "" });
+        } else if (errorMessage.includes("Mật khẩu") || errorMessage.includes("password")) {
+          setErrors({ email: "", password: errorMessage });
+        } else {
+          setErrors({ email: errorMessage, password: "" });
+        }
       }
     } catch (error) {
-      toast.error("Đăng nhập thất bại");
+      setErrors({ email: "Đăng nhập thất bại", password: "" });
     }
   };
 
@@ -105,8 +146,11 @@ const LoginPage = () => {
                 placeholder="Email"
                 className={`w-full h-14 pl-5 rounded-lg text-[#f9f8fa] outline-none focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d] transition-all duration-300 ${
                   email ? "bg-[#E8F0FE] text-black" : "bg-[#6f5b47]"
-                }`}
+                } ${errors.email ? "border-2 border-red-500" : ""}`}
               />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1 text-left">{errors.email}</p>
+              )}
             </div>
 
             <div className="relative">
@@ -120,8 +164,11 @@ const LoginPage = () => {
                 onChange={handleChange}
                 className={`w-full h-14 pl-5 rounded-lg text-[#f9f8fa] outline-none focus:bg-[#E8F0FE] focus:text-black hover:shadow-[0_0_0_2px_#2c1c0d] transition-all duration-300 ${
                   password ? "bg-[#E8F0FE] text-black" : "bg-[#6f5b47]"
-                }`}
+                } ${errors.password ? "border-2 border-red-500" : ""}`}
               />
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1 text-left">{errors.password}</p>
+              )}
             </div>
 
             <button

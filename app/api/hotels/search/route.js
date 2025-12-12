@@ -18,6 +18,10 @@ export async function GET(req) {
     const star_rating = searchParams.get("star_rating") || "";
 
     // 1. Base Query to identify potential hotels
+    // Nếu có check_in/check_out: filter chặt (chỉ lấy khách sạn có phòng available và trống)
+    // Nếu không có: filter lỏng (hiển thị tất cả khách sạn, chỉ filter theo location)
+    const hasDateFilter = check_in && check_out;
+    
     let sql = `
       SELECT DISTINCT 
         h.*,
@@ -25,12 +29,20 @@ export async function GET(req) {
         COUNT(DISTINCT r.id) as total_reviews,
         MIN(rm.price_per_night) as min_price_per_night,
         MAX(rm.price_per_night) as max_price_per_night,
-        COUNT(DISTINCT rm.id) as available_rooms_count
+        COUNT(DISTINCT CASE WHEN rm.status = 'available' THEN rm.id END) as available_rooms_count
       FROM hotels h
       LEFT JOIN reviews r ON h.id = r.hotel_id
-      INNER JOIN rooms rm ON h.id = rm.hotel_id
-      WHERE h.status = 'active' AND rm.status = 'available'
     `;
+
+    // Nếu có check_in/check_out hoặc filter theo price/room_type: dùng INNER JOIN để đảm bảo có phòng phù hợp
+    // Nếu không: dùng LEFT JOIN để hiển thị tất cả khách sạn (kể cả không có phòng available)
+    if (hasDateFilter || min_price > 0 || max_price < 100000000 || room_type) {
+      sql += ` INNER JOIN rooms rm ON h.id = rm.hotel_id`;
+      sql += ` WHERE h.status = 'active' AND rm.status = 'available'`;
+    } else {
+      sql += ` LEFT JOIN rooms rm ON h.id = rm.hotel_id AND rm.status = 'available'`;
+      sql += ` WHERE h.status = 'active'`;
+    }
 
     const params = [];
 
@@ -40,9 +52,17 @@ export async function GET(req) {
       params.push(`%${location}%`);
     }
 
+    // Filter theo adults: nếu có date filter hoặc price filter thì bắt buộc phải có phòng phù hợp
+    // Nếu không, vẫn hiển thị khách sạn (có thể không có phòng phù hợp)
     if (adults > 0) {
-      sql += ` AND rm.max_people >= ?`;
-      params.push(adults);
+      if (hasDateFilter || min_price > 0 || max_price < 100000000 || room_type) {
+        // Có filter khác: bắt buộc phải có phòng phù hợp
+        sql += ` AND rm.max_people >= ?`;
+        params.push(adults);
+      } else {
+        // Không có filter khác: hiển thị tất cả khách sạn, nhưng ưu tiên những khách sạn có phòng phù hợp
+        // (không filter, để hiển thị nhiều khách sạn hơn)
+      }
     }
 
     if (min_price > 0 || max_price < 100000000) {
@@ -55,8 +75,8 @@ export async function GET(req) {
       params.push(parseInt(room_type));
     }
 
-    // Availability Filter (Pre-check at Query Level)
-    if (check_in && check_out) {
+    // Availability Filter (Pre-check at Query Level) - chỉ áp dụng khi có check_in/check_out
+    if (hasDateFilter) {
       sql += ` AND rm.id NOT IN (
         SELECT DISTINCT bd.room_id
         FROM booking_details bd

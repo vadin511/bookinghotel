@@ -217,11 +217,11 @@ const MyBookingsPage = () => {
     return now >= checkIn;
   };
 
-  // Kiểm tra xem đã QUÁ check-out chưa (phải là ngày sau check-out, không tính ngày check-out)
+  // Kiểm tra xem đã QUÁ check-out chưa (12:00 PM ngày checkout)
   const isAfterCheckOut = (checkOutDate) => {
     if (!checkOutDate) return false;
     try {
-      // Lấy ngày hiện tại
+      // Lấy thời gian hiện tại
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       
@@ -242,18 +242,30 @@ const MyBookingsPage = () => {
         checkOut = new Date(checkOutDate);
       }
       
-      // Reset về 00:00:00 để so sánh chỉ theo ngày
-      checkOut = new Date(checkOut.getFullYear(), checkOut.getMonth(), checkOut.getDate());
+      // Lấy ngày check-out (không tính giờ)
+      const checkOutDateOnly = new Date(checkOut.getFullYear(), checkOut.getMonth(), checkOut.getDate());
+      
+      // Tạo thời điểm 12:00 PM ngày checkout
+      const checkOutAt12PM = new Date(checkOut.getFullYear(), checkOut.getMonth(), checkOut.getDate(), 12, 0, 0);
       
       // Kiểm tra nếu parse không thành công
-      if (isNaN(checkOut.getTime())) {
+      if (isNaN(checkOutDateOnly.getTime())) {
         console.error("Invalid check-out date:", checkOutDate);
         return false;
       }
       
-      // So sánh: chỉ trả về true nếu hôm nay > ngày check-out (đã QUÁ check-out)
-      // Nếu hôm nay = ngày check-out thì vẫn chưa quá
-      return today > checkOut;
+      // Logic: đã quá checkout nếu:
+      // 1. Ngày checkout < hôm nay HOẶC
+      // 2. Ngày checkout = hôm nay VÀ giờ hiện tại >= 12:00 PM
+      if (checkOutDateOnly < today) {
+        return true; // Đã qua ngày checkout
+      }
+      
+      if (checkOutDateOnly.getTime() === today.getTime()) {
+        return now >= checkOutAt12PM; // Cùng ngày, kiểm tra giờ >= 12:00 PM
+      }
+      
+      return false; // Chưa tới ngày checkout
     } catch (error) {
       console.error("Error checking check-out date:", error, checkOutDate);
       return false;
@@ -689,7 +701,7 @@ const MyBookingsPage = () => {
                         <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg space-y-2">
                           {booking.cancellation_type && (
                             <p className="text-sm text-red-800">
-                              <span className="font-semibold">Người hủyhủy:</span>{" "}
+                              <span className="font-semibold">Người hủy:</span>{" "}
                               {booking.cancellation_type === "admin"
                                 ? "Admin hủy"
                                 : booking.cancellation_type === "user"
